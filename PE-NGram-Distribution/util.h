@@ -23,11 +23,11 @@ typedef unsigned long   ulong;
 /*===========================================================================*
  *                    Wrapper for utility functions                          *
  *===========================================================================*/
-#define Log							WriteLog(__FILE__, __LINE__, __FUNCTION__,
-#define Log0(p0)					Log p0)
-#define Log1(p0, p1)				Log p0, p1)
-#define Log2(p0, p1, p2)			Log p0, p1, p2)
-#define Log3(p0, p1, p2, p3)		Log p0, p1, p2, p3)
+#define Log                         WriteLog(__FILE__, __LINE__, __FUNCTION__,
+#define Log0(p0)                    Log p0)
+#define Log1(p0, p1)                Log p0, p1)
+#define Log2(p0, p1, p2)            Log p0, p1, p2)
+#define Log3(p0, p1, p2, p3)        Log p0, p1, p2, p3)
 
 #define Malloc(p0)                  MemAlloc (p0,     __FILE__, __LINE__, __FUNCTION__)
 #define Calloc(p0, p1)              MemCalloc(p0, p1, __FILE__, __LINE__, __FUNCTION__)
