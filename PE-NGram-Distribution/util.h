@@ -104,8 +104,15 @@ typedef unsigned long   ulong;
 #define SELECT_PLATEAUS_WITHIN_MAX_ENTROPY_SEC "PLAT_IN_MAX_SEC"
 
 
-/* Wrapper for debug log. */
-int WriteLog(const char*, int, const char*, const char*, ...);
+/**
+ * This function print the designated log message.
+ * 
+ * @param   cszPathCode     The path of the source code. 
+ * @param   iLineNo         The line number of the statement. 
+ * @param   cszFunc         The name of the function.
+ * @param   cszFormat       The string format of the log message.
+ */
+int WriteLog(const char *cszPathCode, int iLineNo, const char *cszFunc, const char *cszFormat, ...);
 
 
 /* Wrapper for memory manipulation utilities. */

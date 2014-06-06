@@ -1,48 +1,35 @@
 #include "util.h"
 #include "except.h"
 
-int GenerateErrorMessage(void *szMsg) {
-    int iErrCode;
-    
-    iErrCode = GetLastError();
-    FormatMessage( (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS),
-                   NULL,
-                   iErrCode,
-                   MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-                   (LPTSTR)&szMsg,
-                   0, NULL);
-    return 0;
-}
 
-int WriteLog(const char* cszPathFile, int iLineNoNo, const char* cszFunc, const char* cszFormat, ...) 
-{
-	char		szLogBuf[BUF_SIZE_MID];
-	va_list		varArgument;
-	int	        iLen;
-	SYSTEMTIME	szSysTime;
+/**
+ * WriteLog(): Pring the designated log message.
+ */
+void WriteLog(const char* cszPathFile, int iLineNo, const char* cszFunc, const char* cszFormat, ...) {
+    char     szLogBuf[BUF_SIZE_MID];
+    int      iLen;
+    time_t   numTime;        
+    va_list  varArgument;
+    char     *szTime;    
 
-	memset(szLogBuf, 0, sizeof(char) * BUF_SIZE_MID);
-	va_start(varArgument, cszFormat);
-	iLen = vsnprintf(szLogBuf, sizeof(szLogBuf), cszFormat, varArgument);
-	va_end(varArgument);
+    memset(szLogBuf, 0, sizeof(char) * BUF_SIZE_MID);
+    va_start(varArgument, cszFormat);
+    iLen = vsnprintf(szLogBuf, sizeof(szLogBuf), cszFormat, varArgument);
+    va_end(varArgument);
 
-	if((iLen == -1) || (iLen >= (int)sizeof(szLogBuf)))
-	{
-		iLen = sizeof(szLogBuf) - 1;
-		szLogBuf[iLen] = 0;
-	}
-	else if(iLen == 0)
-	{
-		iLen = 0;
-		szLogBuf[0] = 0;
-	}
+    if((iLen == -1) || (iLen >= (int)sizeof(szLogBuf))) {
+	    iLen = sizeof(szLogBuf) - 1;
+	    szLogBuf[iLen] = 0;
+    } else if(iLen == 0) {
+	    iLen = 0;
+	    szLogBuf[0] = 0;
+    }
 
-	GetSystemTime(&szSysTime);
-    
-	printf("%d/%d/%d %d:%d:%d\t%s\n[%s, %d]\n", szSysTime.wYear, szSysTime.wMonth, szSysTime.wDay, szSysTime.wHour, szSysTime.wMinute, szSysTime.wSecond,
-												szLogBuf, cszPathFile, iLineNoNo);
+    numTime = time(NULL);
+    szTime = asctime(localtime(&numTime))
+    printf("%s [%s, %d, %s]\n%s\n", szTime, cszPathFile, iLineNo, cszFunc, szLogBuf);
 
-	return 0;
+    return;
 }
 
 // Wrapped memory manipulations.
