@@ -11,9 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <math.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <time.h>
 
 
 typedef unsigned char   uchar;
@@ -97,7 +99,7 @@ typedef unsigned long   ulong;
 #if defined(_WIN32)
     #define OS_PATH_SEPARATOR               '\\'
 #elif defined(__linux__)
-     #define OS_PATH_SEPARATOR               '/'
+    #define OS_PATH_SEPARATOR               '/'
 #endif
 
 /* Strategies for entropy block selection. */
@@ -112,7 +114,7 @@ typedef unsigned long   ulong;
  * @param   cszFunc         The name of the function.
  * @param   cszFormat       The string format of the log message.
  */
-int WriteLog(const char *cszPathCode, int iLineNo, const char *cszFunc, const char *cszFormat, ...);
+void WriteLog(const char *cszPathCode, int iLineNo, const char *cszFunc, const char *cszFormat, ...);
 
 
 /* Wrapper for memory manipulation utilities. */
