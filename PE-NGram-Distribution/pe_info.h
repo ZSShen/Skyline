@@ -3,67 +3,68 @@
 
 #include "util.h"
 
-// Data structures to store PE related information.
-typedef struct PEHeader_ {
+
+/* Structure to store the PE header information. */
+typedef struct _PEHeader {
     ulong   ulHeaderOffset;
-    int     iCountSections;
+    int     iNumSections;
 } PEHeader;
 
-typedef struct EntropyInfo_ {
+
+/* Structure to store the entroy data of a section. */
+typedef struct _EntropyInfo {
     ulong   ulSizeArray;
     double  *arrEntropy;
     double  dMaxEntropy, dAvgEntropy, dMinEntropy;
 } EntropyInfo;
 
-typedef struct SectionInfo_ {
+
+/* Structure to store the section information. */
+typedef struct _SectionInfo {
     ulong       ulRawSize, ulRawOffset, ulCharacteristics;
-    ulong       ulSizeTokenArray;
     char        szNormalizedName[SECTION_HEADER_SECTION_NAME_SIZE + 1]; 
-    char        szRawName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
+    char        szOriginalName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
     EntropyInfo *pEntropyInfo;    
 } SectionInfo;
 
 
-// Data structures to store n-gram analysis result.
-typedef struct NGramToken_ {
+/* Structure to store the n-gram token. */
+typedef struct _NGramToken {
     ulong ulValue, ulFrequency;
 } NGramToken;
 
-typedef struct NGramTokenSet_ {
-    int         idxSection;
-    NGramToken  *arrToken;
-} NGramTokenSet;
 
-typedef struct NGramSingleSlice_ {
-    NGramToken  tokenDenominator, tokenNumerator;
-    double      dFactor;
-} NGramSingleSlice;
-
-typedef struct NGramModel_ {
-    int                 iCountSets;
-    ulong               ulNGramSpace, ulModelRealSize;
-    NGramTokenSet       *arrTokenSet;
-    NGramSingleSlice    *arrSlice;
-} NGramModel;
-
-
-// Summarized data structure.
+/* Structure to store the complete analysis result for a PE file. */
 typedef struct PEInfo_ {
-    char            *szSample;
-    FILE            *fpFile;
-    PEHeader        *pPEHeader;
-    SectionInfo     **arrSectionInfo;
-    NGramModel      *pNGramModel;
+    char          *szSamplePath;
+    FILE          *fpSample;
+    PEHeader      *pPEHeader;
+    SectionInfo   **arrSectionInfo;
 } PEInfo;
 
 
-int PEInfoInit(PEInfo**, const char*);
-int PEInfoUninit(PEInfo*);
+/* Wrapper for PEInfo initialization. */
+#define PEInfo_init(p)          try { \
+                                    p = (PEInfo*)Malloc(sizeof(PEInfo)); \
+                                } catch (EXCEPT_MEM_ALLOC) { \
+                                    p = NULL;                \
+                                } end_try; 
 
+
+/* Constructor for PEInfo structure. */
+void PEInfoInit(PEInfo *pPEInfo);
+
+
+/* Destructure for PEInfo structure. */
+void PEInfoDeinit(PEInfo *pPEInfo);
+
+
+/*
 int PEInfoParseHeaders(PEInfo*);
 int PEInfoCalculateSectionEntropy(PEInfo*);
 int PEInfoCollectNGramTokens(PEInfo*, int);
-
 int FuncCompareNGramToken(const void*, const void*);
+*/
+
 
 #endif

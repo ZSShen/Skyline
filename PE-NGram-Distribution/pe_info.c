@@ -2,6 +2,18 @@
 #include "except.h"
 #include "pe_info.h"
 
+void PEInfoInit(PEInfo *self) {
+    
+    self->szSamplePath = NULL;
+    self->fpSample = NULL;
+    self->pPEHeader = NULL;
+    self->arrSectionInfo = NULL;
+
+    return;
+}
+
+
+/*
 int PEInfoInit(PEInfo **pSelf, const char *szInput) {
     int iRet, idxTail, idxFront;
 
@@ -45,6 +57,7 @@ int PEInfoInit(PEInfo **pSelf, const char *szInput) {
     
     return iRet;
 }
+
 
 int PEInfoUninit(PEInfo *self) {
     int         i, iSize;
@@ -333,3 +346,4 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
 EXIT:
     return iRet;
 }
+*/
