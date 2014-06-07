@@ -30,7 +30,7 @@ void WriteLog(const char* cszPathFile, int iLineNo, const char* cszFunc, const c
     tmTime = localtime(&nTime);
     szTime = asctime(tmTime);
 
-    printf("%s [%s, %d, %s]\n%s\n", szTime, cszPathFile, iLineNo, cszFunc, szLogBuf);
+    printf("[%s, %d, %s] %s%s", cszPathFile, iLineNo, cszFunc, szTime, szLogBuf);
 
     return;
 }

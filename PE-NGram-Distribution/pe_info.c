@@ -17,6 +17,17 @@ void PEInfoInit(PEInfo *self) {
 }
 
 
+void PEInfoDeinit(PEInfo *self) {
+
+    if (self->szSampleName != NULL)
+        Free(self->szSampleName);
+
+    if (self->fpSample != NULL)
+        Fclose(self->fpSample);
+
+    return;
+}
+
 /**
  * PEInfoOpenSample(): Open the specified sample for analysis.
  */
@@ -30,7 +41,6 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
         self->fpSample = Fopen(cszSamplePath, "rb");
         
         /* Extract the name of the input sample. */
-        /*
         idxTail = strlen(cszSamplePath);
         idxFront = idxTail;
         while ((idxTail > 0) && (cszSamplePath[idxTail - 1] != '.'))
@@ -40,13 +50,12 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
             
         idxFront = idxTail;
         idxTail--;    
-        while ((idxFront > 0) && (szInput[idxFront - 1] != OS_PATH_SEPARATOR))
+        while ((idxFront > 0) && (cszSamplePath[idxFront - 1] != OS_PATH_SEPARATOR))
             idxFront--;
-        
-        self->szSampleName = NULL;
-        self->szSampleName = (char*)Calloc((idxTail - idxFront), sizeof(char));        
-        //Memcopy(self->szSampleName, cszSamplePath + idxFront, (idxTail - idxFront), sizeof(char));
-        */
+
+        self->szSampleName = (char*)Calloc((idxTail - idxFront + 1), sizeof(char));        
+        MemCopy(self->szSampleName, cszSamplePath + idxFront, (idxTail - idxFront), sizeof(char));
+
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_OPEN) {

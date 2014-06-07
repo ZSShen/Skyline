@@ -33,12 +33,12 @@ typedef unsigned long   ulong;
 
 #define Malloc(p0)                  MemAlloc (p0,     __FILE__, __LINE__, __FUNCTION__)
 #define Calloc(p0, p1)              MemCalloc(p0, p1, __FILE__, __LINE__, __FUNCTION__)
-#define Free  (p0)                  MemFree  (p0)
+#define Free(p0)                    MemFree(p0)
 
-#define Fopen (p0, p1)              FileOpen (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
-#define Fread (p0, p1, p2, p3)      FileRead (p0, p1, p2, p3, __FILE__, __LINE__, __FUNCTION__)
+#define Fopen(p0, p1)               FileOpen (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
+#define Fread(p0, p1, p2, p3)       FileRead (p0, p1, p2, p3, __FILE__, __LINE__, __FUNCTION__)
 #define Fwrite(p0, p1, p2, p3)      FileWrite(p0, p1, p2, p3, __FILE__, __LINE__, __FUNCTION__)
-#define Fseek (p0, p1, p2)          FileSeek (p0, p1, p2,     __FILE__, __LINE__, __FUNCTION__)
+#define Fseek(p0, p1, p2)           FileSeek (p0, p1, p2,     __FILE__, __LINE__, __FUNCTION__)
 #define Fclose(p0)                  FileClose(p0)
 
 

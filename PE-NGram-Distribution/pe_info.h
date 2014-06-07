@@ -48,9 +48,18 @@ typedef struct _PEInfo {
 /* Wrapper for PEInfo initialization. */
 #define PEInfo_init(p)          try { \
                                     p = (PEInfo*)Malloc(sizeof(PEInfo)); \
+                                    PEInfoInit(p); \
                                 } catch (EXCEPT_MEM_ALLOC) { \
                                     p = NULL; \
                                 } end_try; 
+
+
+/* Wrapper for PEInfo deinitialization. */
+#define PEInfo_deinit(p)        if (p != NULL) { \
+                                    PEInfoDeinit(p); \
+                                    Free(p); \
+                                    p = NULL; \
+                                }
 
 
 /* Constructor for PEInfo structure. */
