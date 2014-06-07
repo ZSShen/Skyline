@@ -26,14 +26,14 @@
  *===========================================================================*/
 /* Implementation for try statement. */
 #define try                 do{\
-                                volatile int iExceptId; \
-                                iExceptId = setjmp(bufExcept); \
-                                switch(iExceptId) { \
+                                volatile int ExceptNum; \
+                                ExceptNum = setjmp(bufExcept); \
+                                switch(ExceptNum) { \
                                     case EXCEPT_NO:\
 
 /* Implementation for catch statement. */
-#define catch(iExceptId)    break; \
-                            case iExceptId: \
+#define catch(ExceptNum)    break; \
+                            case ExceptNum: \
 
 
 /* Implementation for end_try statement. */            
@@ -41,8 +41,13 @@
 
 
 /* Implementation for throw statement. */
-#define throw(iExceptId)    { WriteLog(cszPathFile, iLineNo, cszFunc, "Error Code: %d", GetLastError()); \
-                              longjmp(bufExcept, iExceptId); }
+#if defined(__WIN32)
+    #define throw(ExceptNum)    { WriteLog(cszPathFile, iLineNo, cszFunc, "Error Code: %d\n", GetLastError()); \
+                                  longjmp(bufExcept, ExceptNum); }
+#elif defined(__linux__)
+    #define throw(ExceptNum)    { WriteLog(cszPathFile, iLineNo, cszFunc, "Message: %s\n", strerror(errno)); \
+                                  longjmp(bufExcept, ExceptNum); }
+#endif
 
 
 /* The buffer stors the destination of long jump when exception occurs. */
