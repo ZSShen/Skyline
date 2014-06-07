@@ -35,11 +35,13 @@ typedef struct _NGramToken {
 
 
 /* Structure to store the complete analysis result for a PE file. */
-typedef struct PEInfo_ {
-    char          *szSamplePath;
+typedef struct _PEInfo {
+    char          *szSampleName;
     FILE          *fpSample;
     PEHeader      *pPEHeader;
     SectionInfo   **arrSectionInfo;
+
+    int     (*openSample) (struct _PEInfo*, const char*);
 } PEInfo;
 
 
@@ -47,7 +49,7 @@ typedef struct PEInfo_ {
 #define PEInfo_init(p)          try { \
                                     p = (PEInfo*)Malloc(sizeof(PEInfo)); \
                                 } catch (EXCEPT_MEM_ALLOC) { \
-                                    p = NULL;                \
+                                    p = NULL; \
                                 } end_try; 
 
 
@@ -57,6 +59,18 @@ void PEInfoInit(PEInfo *pPEInfo);
 
 /* Destructure for PEInfo structure. */
 void PEInfoDeinit(PEInfo *pPEInfo);
+
+
+/**
+ * This function opens the specified sample for analysis.
+ *
+ * @param   self            The pointer to the PEInfo structure.
+ * @param   cszSamplePath   The path of the specified sample.
+ * 
+ * @return                  0: The sample is successfully opened.
+ *                        < 0: The sample cannot be opend.
+ */
+int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath);
 
 
 /*

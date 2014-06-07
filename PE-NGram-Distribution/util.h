@@ -121,6 +121,8 @@ void WriteLog(const char *cszPathCode, int iLineNo, const char *cszFunc, const c
 void* MemAlloc(size_t, const char*, const int, const char*);
 void* MemCalloc(size_t, size_t, const char*, const int, const char*);
 void MemFree(void*);
+void MemCopy(void*, const void*, size_t, size_t);
+
 
 /* Wrapper for file manipulation utilties. */
 FILE* FileOpen(const char*, const char*, const char*, const int, const char*);

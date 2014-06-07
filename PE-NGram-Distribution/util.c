@@ -77,6 +77,18 @@ void MemFree(void *ptr) {
 
 
 /**
+ * MemCopy(): Copy the contents of the source memory space to the target one.
+ */
+void MemCopy(void *pTge, const void *pSrc, size_t nLength, size_t nSize) {
+
+    memset(pTge, 0, (nLength + 1) * nSize);
+    memcpy(pTge, pSrc, nLength * nSize);
+    return;
+}
+
+
+
+/**
  * FileOpen(): Wrapper function for fopen().
  */
 FILE* FileOpen(const char *cszPath, const char *cszMode, const char *cszPathFile, const int iLineNo, const char* cszFunc) {

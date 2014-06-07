@@ -2,14 +2,58 @@
 #include "except.h"
 #include "pe_info.h"
 
+
 void PEInfoInit(PEInfo *self) {
     
-    self->szSamplePath = NULL;
+    self->szSampleName = NULL;
     self->fpSample = NULL;
     self->pPEHeader = NULL;
     self->arrSectionInfo = NULL;
 
+    /* Let the function pointers point to the corresponding functions. */
+    self->openSample = PEInfoOpenSample;
+
     return;
+}
+
+
+/**
+ * PEInfoOpenSample(): Open the specified sample for analysis.
+ */
+int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
+    int rc, idxFront, idxTail;
+
+    try {
+        rc = 0;
+    
+        /* Create the file pointer for the input sample. */        
+        self->fpSample = Fopen(cszSamplePath, "rb");
+        
+        /* Extract the name of the input sample. */
+        /*
+        idxTail = strlen(cszSamplePath);
+        idxFront = idxTail;
+        while ((idxTail > 0) && (cszSamplePath[idxTail - 1] != '.'))
+            idxTail--;
+        if (idxTail == 0)
+            idxTail = idxFront;
+            
+        idxFront = idxTail;
+        idxTail--;    
+        while ((idxFront > 0) && (szInput[idxFront - 1] != OS_PATH_SEPARATOR))
+            idxFront--;
+        
+        self->szSampleName = NULL;
+        self->szSampleName = (char*)Calloc((idxTail - idxFront), sizeof(char));        
+        //Memcopy(self->szSampleName, cszSamplePath + idxFront, (idxTail - idxFront), sizeof(char));
+        */
+    } catch(EXCEPT_MEM_ALLOC) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_OPEN) {
+        rc = -1;
+    } end_try;
+
+    return rc;
 }
 
 

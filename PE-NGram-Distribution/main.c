@@ -1,9 +1,18 @@
 #include "util.h"
-#include "pe_info.h"
-#include "policy.h"
-#include "report.h"
+#include "except.h"
+//#include "pe_info.h"
+
 
 int main(int argc, char **argv) {
+    
+    try {
+        Fwrite(NULL, 0, 0, NULL);
+    } catch(EXCEPT_IO_FILE_OPEN) {
+
+    } end_try;
+
+
+/*
     int             i, j, iRet, iNGramDimension, iSizeArray;
     const char      *szInput, *szOutput, *cszPolicy;
     PEInfo          *pPEInfo;
@@ -56,4 +65,5 @@ FREE_PEINFO:
     PEInfoUninit(pPEInfo);
 EXIT:
     return iRet;
+*/
 }
