@@ -7,7 +7,7 @@
 /* Structure to store the PE header information. */
 typedef struct _PEHeader {
     ulong   ulHeaderOffset;
-    int     iNumSections;
+    ushort  ulNumSections;
 } PEHeader;
 
 
@@ -22,8 +22,8 @@ typedef struct _EntropyInfo {
 /* Structure to store the section information. */
 typedef struct _SectionInfo {
     ulong       ulRawSize, ulRawOffset, ulCharacteristics;
-    char        szNormalizedName[SECTION_HEADER_SECTION_NAME_SIZE + 1]; 
-    char        szOriginalName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
+    uchar       uszNormalizedName[SECTION_HEADER_SECTION_NAME_SIZE + 1]; 
+    uchar       uszOriginalName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
     EntropyInfo *pEntropyInfo;    
 } SectionInfo;
 
@@ -41,7 +41,8 @@ typedef struct _PEInfo {
     PEHeader      *pPEHeader;
     SectionInfo   **arrSectionInfo;
 
-    int     (*openSample) (struct _PEInfo*, const char*);
+    int     (*openSample)   (struct _PEInfo*, const char*);
+    int     (*parseHeaders) (struct _PEInfo*);
 } PEInfo;
 
 
@@ -81,6 +82,15 @@ void PEInfoDeinit(PEInfo *pPEInfo);
  */
 int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath);
 
+
+/**
+ * This function collects the information from MZ header, PE header, PE option header,
+ * and all the section headers.
+ *
+ * @return                  0: The information is collected successfully.
+ *                        < 0: No enough memory space for information collection.
+ */
+int PEInfoParseHeaders(PEInfo *self);
 
 /*
 int PEInfoParseHeaders(PEInfo*);

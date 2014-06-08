@@ -12,18 +12,33 @@ void PEInfoInit(PEInfo *self) {
 
     /* Let the function pointers point to the corresponding functions. */
     self->openSample = PEInfoOpenSample;
+    self->parseHeaders = PEInfoParseHeaders;
 
     return;
 }
 
 
 void PEInfoDeinit(PEInfo *self) {
+    int i;
 
     if (self->szSampleName != NULL)
         Free(self->szSampleName);
 
     if (self->fpSample != NULL)
         Fclose(self->fpSample);
+    
+    /* Free all the SectionInfo structures. */
+    if (self->arrSectionInfo != NULL) {
+        for (i = 0 ; i < self->pPEHeader->ulNumSections ; i++) {
+            if (self->arrSectionInfo[i] != NULL)        
+                Free(self->arrSectionInfo[i]);
+        }
+        Free(self->arrSectionInfo);    
+    }
+
+    /* Free the PEHeader structure. */
+    if (self->pPEHeader != NULL)
+        Free(self->pPEHeader);
 
     return;
 }
@@ -62,6 +77,153 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
         rc = -1;
     } end_try;
 
+    return rc;
+}
+
+
+/**
+ * PEInfoParseHeaders(): Collect the information from MZ header, PE header, PE option header,
+ *                       and all the section headers.
+ */
+int PEInfoParseHeaders(PEInfo *self) {
+    int     rc, i, j;
+    ushort  ulWord;
+    ulong   ulDword, ulOffset;
+    size_t  nExptRead, nRealRead;
+    uchar   *uszOriginalName;
+    uchar   buf[BUF_SIZE_SMALL];
+    
+    rc = 0;
+    try {
+        /* Create the PEHeader structure. */
+        self->pPEHeader = NULL;
+        self->pPEHeader = (PEHeader*)Malloc(sizeof(PEHeader));
+        
+        //------------------------------------------------
+        //  Examine DOS(MZ) header.
+        //------------------------------------------------
+        /* Check the MZ header. */
+        nExptRead = DOS_HEADER_SIZE;
+        nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
+        if ((nExptRead != nRealRead) || (buf[0] != 'M' || buf[1] != 'Z')) {
+            Log0("Invalid PE file (Invalid MZ header).\n");
+            rc = -1;
+            goto EXIT;
+        }
+        
+        /* Resolve the starting offset of PE header. */
+        ulDword = 0;
+        for (i = 1 ; i <= DATATYPE_SIZE_DWORD ; i++) {
+            ulDword <<= SHIFT_RANGE_8BIT;
+            ulDword += buf[DOS_HEADER_OFF_PE_HEADER_OFFSET + DATATYPE_SIZE_DWORD - i] & 0xff;
+        }
+        self->pPEHeader->ulHeaderOffset = ulDword;
+
+        /* Move to the starting offset of PE header. */
+        ulOffset = ulDword;
+        Fseek(self->fpSample, ulOffset, SEEK_SET);
+      
+        //------------------------------------------------
+        //  Examine PE header.
+        //------------------------------------------------
+        /* Check the PE header. */
+        nExptRead = PE_HEADER_SIZE;
+        nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
+        if ((nExptRead != nRealRead) || (buf[0] != 'P' || buf[1] != 'E')) {
+            Log0("Invalid PE file (Invalid PE header).\n");
+            rc = -1;
+            goto EXIT;
+        }
+    
+        /* Resolve the amount of sections. */
+        ulWord = 0;
+        for (i = 1 ; i <= DATATYPE_SIZE_WORD ; i++) {
+            ulWord <<= SHIFT_RANGE_8BIT;
+            ulWord += buf[PE_HEADER_OFF_NUMBER_OF_SECTIONS + DATATYPE_SIZE_WORD - i] & 0xff;
+        }
+        self->pPEHeader->ulNumSections = ulWord;
+
+        /* Resolve the size of optional header. */
+        ulWord = 0;
+        for (i = 1 ; i <= DATATYPE_SIZE_WORD ; i++) {
+            ulWord <<= SHIFT_RANGE_8BIT;
+            ulWord += buf[PE_HEADER_OFF_SIZE_OF_OPT_HEADER + DATATYPE_SIZE_WORD - i] & 0xff;
+        }
+        
+        /* Move to the starting offset of section headers. */
+        ulOffset = self->pPEHeader->ulHeaderOffset + PE_HEADER_SIZE + ulWord;
+        Fseek(self->fpSample, ulOffset, SEEK_SET);
+        
+        //------------------------------------------------
+        //  Examine all the section headers.
+        //------------------------------------------------
+        /* Create the array to store the SectionInfo structure for each section. */
+        ulWord = self->pPEHeader->ulNumSections;
+        self->arrSectionInfo = (SectionInfo**)Calloc(ulWord, sizeof(SectionInfo*));
+        memset(self->arrSectionInfo, (uint)NULL, sizeof(SectionInfo*) * ulWord);
+        
+        /* Traverse the section headers to collect the information from each section. */
+        for (i = 0 ; i < ulWord ; i++) {
+            nExptRead = SECTION_HEADER_PER_ENTRY_SIZE;
+            nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
+            if (nExptRead != nRealRead) {
+                Log0("Invalid PE file (Invalid section header).\n");
+                rc = -1;
+                goto EXIT;
+            }
+            
+            /* Create the SectionInfo structure. */
+            self->arrSectionInfo[i] = NULL;
+            self->arrSectionInfo[i] = (SectionInfo*)Malloc(sizeof(SectionInfo));
+            self->arrSectionInfo[i]->pEntropyInfo = NULL;
+        
+            /* Record the section name. */
+            memset(self->arrSectionInfo[i]->uszOriginalName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);
+            memset(self->arrSectionInfo[i]->uszNormalizedName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);            
+        
+            MemCopy(self->arrSectionInfo[i]->uszOriginalName, buf, SECTION_HEADER_SECTION_NAME_SIZE, sizeof(uchar));            
+            uszOriginalName = self->arrSectionInfo[i]->uszOriginalName;
+            for (j = 0 ; j < SECTION_HEADER_SECTION_NAME_SIZE ; j++) {
+                if((uszOriginalName[j] >= 32) && (uszOriginalName[j] <= 126))
+                    self->arrSectionInfo[i]->uszNormalizedName[j] = uszOriginalName[j];
+                else
+                    self->arrSectionInfo[i]->uszNormalizedName[j] = '_';
+            }
+            
+            /* Record the raw section size. */
+            ulDword = 0;
+            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
+                ulDword <<= SHIFT_RANGE_8BIT;
+                ulDword += buf[SECTION_HEADER_OFF_RAW_SIZE + DATATYPE_SIZE_DWORD - j] & 0xff;
+            }
+            self->arrSectionInfo[i]->ulRawSize = ulDword;
+        
+            /* Record the raw section offset. */
+            ulDword = 0;
+            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
+                ulDword <<= SHIFT_RANGE_8BIT;
+                ulDword += buf[SECTION_HEADER_OFF_RAW_OFFSET + DATATYPE_SIZE_DWORD - j] & 0xff;
+            }
+            self->arrSectionInfo[i]->ulRawOffset = ulDword;
+
+            /* Record the section characteristics. */
+            ulDword = 0;
+            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
+                ulDword <<= SHIFT_RANGE_8BIT;
+                ulDword += buf[SECTION_HEADER_OFF_CHARS + DATATYPE_SIZE_DWORD - j] & 0xff;
+            }
+            self->arrSectionInfo[i]->ulCharacteristics = ulDword;
+        }
+    } catch(EXCEPT_MEM_ALLOC) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_READ) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_SEEK) {
+        Log0("Invalid PE file (The target header can not be reached).\n");
+        rc = -1;
+    } end_try;
+    
+EXIT:
     return rc;
 }
 
@@ -170,138 +332,6 @@ int PEInfoUninit(PEInfo *self) {
     return 0;
 }
 
-int PEInfoParseHeaders(PEInfo* self) {
-    int     i, j, iRet, iStatus, iDword, iWord, iOffset, iExptRead, iRealRead;
-    char    *szRawName;
-    char    buf[BUF_SIZE_SMALL];
-    
-    iRet = 0;
-
-    try {
-        // Allocate the memory for PEHeader structure.
-        self->pPEHeader = NULL;
-        self->pPEHeader = (PEHeader*) Malloc(sizeof(PEHeader));
-        
-        // Check the MZ header.
-        iExptRead = DOS_HEADER_SIZE;
-        iRealRead = Fread(buf, sizeof(char), iExptRead, self->fpFile);
-        if ( (iExptRead != iRealRead) ||
-             (buf[0] != 'M' || buf[1] != 'Z') ) {
-            Log0("Invalid PE file (Invalid MZ header).\n");
-            iRet = -1;
-            goto EXIT;
-        }
-        
-        // Resolve the starting offset of PE header.
-        iDword = 0;
-        for (i = 1 ; i <= DATATYPE_SIZE_DWORD ; i++) {
-            iDword <<= SHIFT_RANGE_8BIT;
-            iDword += buf[DOS_HEADER_OFF_PE_HEADER_OFFSET + DATATYPE_SIZE_DWORD - i] & 0xff;
-        }
-        self->pPEHeader->ulHeaderOffset = iDword;
-
-        // Move to the starting offset of PE header.
-        iOffset = iDword;
-        Fseek(self->fpFile, iOffset, SEEK_SET);
-      
-        // Check the PE header.
-        iExptRead = PE_HEADER_SIZE;
-        iRealRead = Fread(buf, sizeof(char), iExptRead, self->fpFile);
-        if ( (iExptRead != iRealRead) ||
-             (buf[0] != 'P' || buf[1] != 'E') ) {
-            Log0("Invalid PE file (Invalid PE header).\n");
-            iRet = -1;
-            goto EXIT;
-        }
-    
-        // Resolve the amount of sections.
-        iWord = 0;
-        for (i = 1 ; i <= DATATYPE_SIZE_WORD ; i++) {
-            iWord <<= SHIFT_RANGE_8BIT;
-            iWord += buf[PE_HEADER_OFF_NUMBER_OF_SECTIONS + DATATYPE_SIZE_WORD - i] & 0xff;
-        }
-        self->pPEHeader->iCountSections = iWord;
-
-        // Resolve the size of optional header.
-        iWord = 0;
-        for (i =1 ; i <= DATATYPE_SIZE_WORD ; i++) {
-            iWord <<= SHIFT_RANGE_8BIT;
-            iWord += buf[PE_HEADER_OFF_SIZE_OF_OPT_HEADER + DATATYPE_SIZE_WORD - i] & 0xff;
-        }
-        
-        // Move to the starting offset of section header.
-        iOffset = self->pPEHeader->ulHeaderOffset + PE_HEADER_SIZE + iWord;
-        Fseek(self->fpFile, iOffset, SEEK_SET);
-               
-        // Allocate the memory to construct the section layout.
-        self->arrSectionInfo = NULL;
-        self->arrSectionInfo = (SectionInfo**) Calloc(iWord, sizeof(SectionInfo*));
-        memset(self->arrSectionInfo, (int)NULL, sizeof(SectionInfo*) * iWord);
-        
-        // Traverse the section header to collect information of each section.
-        for (i = 0 ; i < iWord ; i++) {
-            iExptRead = SECTION_HEADER_PER_ENTRY_SIZE;
-            iRealRead = Fread(buf, sizeof(char), iExptRead, self->fpFile);
-            if (iExptRead != iRealRead) {
-                Log0("Invalid PE file (Invalid section header).\n");
-                iRet = -1;
-                goto EXIT;
-            }
-            
-            // Allocate the memory for SectionInfo structure.
-            self->arrSectionInfo[i] = NULL;
-            self->arrSectionInfo[i] = (SectionInfo*) Malloc(sizeof(SectionInfo));
-            self->arrSectionInfo[i]->pEntropyInfo = NULL;
-        
-            // Record the section name.
-            memset(self->arrSectionInfo[i]->szRawName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);
-            memset(self->arrSectionInfo[i]->szNormalizedName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);            
-            
-            strncpy(self->arrSectionInfo[i]->szRawName, buf, SECTION_HEADER_SECTION_NAME_SIZE);
-            szRawName = self->arrSectionInfo[i]->szRawName;
-            for (j = 0 ; j < SECTION_HEADER_SECTION_NAME_SIZE ; j++) {
-                if((szRawName[j] >= 32) && (szRawName[j] <= 126))
-                    self->arrSectionInfo[i]->szNormalizedName[j] = szRawName[j];
-                else
-                    self->arrSectionInfo[i]->szNormalizedName[j] = '_';
-            }
-            
-            // Record the raw size.
-            iDword = 0;
-            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
-                iDword <<= SHIFT_RANGE_8BIT;
-                iDword += buf[SECTION_HEADER_OFF_RAW_SIZE + DATATYPE_SIZE_DWORD - j] & 0xff;
-            }
-            self->arrSectionInfo[i]->ulRawSize = iDword;
-        
-            // Record the raw offset.
-            iDword = 0;
-            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
-                iDword <<= SHIFT_RANGE_8BIT;
-                iDword += buf[SECTION_HEADER_OFF_RAW_OFFSET + DATATYPE_SIZE_DWORD - j] & 0xff;
-            }
-            self->arrSectionInfo[i]->ulRawOffset = iDword;
-            
-            // Record the characteristics.
-            iDword = 0;
-            for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
-                iDword <<= SHIFT_RANGE_8BIT;
-                iDword += buf[SECTION_HEADER_OFF_CHARS + DATATYPE_SIZE_DWORD - j] & 0xff;
-            }
-            self->arrSectionInfo[i]->ulCharacteristics = iDword;
-        }
-    } catch(EXCEPT_MEM_ALLOC) {
-        iRet = -1;
-    } catch(EXCEPT_IO_FILE_READ) {
-        iRet = -1;
-    } catch(EXCEPT_IO_FILE_SEEK) {
-        Log0("Invalid PE file (The target header can not be reached).\n");
-        iRet = -1;
-    } end_try;
-    
-EXIT:
-    return iRet;
-}
 
 
 int PEInfoCalculateSectionEntropy(PEInfo *self) {
