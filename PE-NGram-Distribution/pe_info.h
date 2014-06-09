@@ -43,6 +43,7 @@ typedef struct _PEInfo {
 
     int     (*openSample)   (struct _PEInfo*, const char*);
     int     (*parseHeaders) (struct _PEInfo*);
+    void    (*dump)         (struct _PEInfo*);
 } PEInfo;
 
 
@@ -92,8 +93,15 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath);
  */
 int PEInfoParseHeaders(PEInfo *self);
 
+
+/**
+ * This function dumps the information recorded from the input sample for debug.
+ *
+ * @param   self            The pointer to the PEInfo structure.
+ */
+void PEInfoDump(PEInfo *self);
+
 /*
-int PEInfoParseHeaders(PEInfo*);
 int PEInfoCalculateSectionEntropy(PEInfo*);
 int PEInfoCollectNGramTokens(PEInfo*, int);
 int FuncCompareNGramToken(const void*, const void*);

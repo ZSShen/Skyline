@@ -24,6 +24,8 @@ int main(int argc, char **argv) {
     if (rc != 0)
         goto EXIT;
 
+    pPEInfo->dump(pPEInfo);
+
 EXIT:
     /* Deinitialize the PEInfo structure. */
     PEInfo_deinit(pPEInfo);

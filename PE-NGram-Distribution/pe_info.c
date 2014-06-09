@@ -13,6 +13,7 @@ void PEInfoInit(PEInfo *self) {
     /* Let the function pointers point to the corresponding functions. */
     self->openSample = PEInfoOpenSample;
     self->parseHeaders = PEInfoParseHeaders;
+    self->dump = PEInfoDump;
 
     return;
 }
@@ -227,6 +228,32 @@ EXIT:
     return rc;
 }
 
+
+/**
+ * PEInfoDump(): Dump the information recorded from the input sample for debug.
+ */
+void PEInfoDump(PEInfo *self) {
+    int         i, j;    
+    ushort      ulNumSections;
+    SectionInfo *pSection;
+    
+    printf("Sample Name: %s\n", self->szSampleName);
+
+    ulNumSections = self->pPEHeader->ulNumSections;
+    printf("Total: %d sections\n\n", ulNumSections);
+    for (i = 0 ; i < ulNumSections ; i++) {
+        pSection = self->arrSectionInfo[i];
+        
+        printf("Section    Name: %s\n", pSection->uszNormalizedName);
+        printf("Characteristics: 0x%08lx\n", pSection->ulCharacteristics);
+        printf("Raw      Offset: 0x%08lx\n", pSection->ulRawOffset);
+        printf("Raw        Size: 0x%08lx\n", pSection->ulRawSize);
+
+        printf("\n");
+    }
+    
+    return;
+}
 
 /*
 int PEInfoInit(PEInfo **pSelf, const char *szInput) {
