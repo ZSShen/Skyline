@@ -1,8 +1,8 @@
 main: util.o except.o pe_info.o main.o 
-	gcc -o ngram_distribution main.o util.o except.o pe_info.o
+	gcc -o ngram_distribution main.o util.o except.o pe_info.o -lm
 
 debug: util.o except.o pe_info.o main.o
-	gcc -g -o ngram_distribution main.o util.o except.o pe_info.o
+	gcc -g -o ngram_distribution main.o util.o except.o pe_info.o -lm
 
 main.o: util.h
 	gcc -c main.c

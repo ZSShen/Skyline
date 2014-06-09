@@ -306,11 +306,11 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
 
                 /* Calculate the entropy for this block. */                    
                 dEntropy = 0;
-                dLogBase = log10(ENTROPY_LOG_BASE);
+                dLogBase = log(ENTROPY_LOG_BASE);
                 for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) {
                     dProb = (double)refFreq[j] / (double)ENTROPY_BLK_SIZE;
-                    //dLogProb = (dProb > 0)? (log(dProb) / dLogBase) : 0;
-                    //dEntropy += dProb * dLogProb;
+                    dLogProb = (dProb > 0)? (log(dProb) / dLogBase) : 0;
+                    dEntropy += dProb * dLogProb;
                 }
                 dEntropy = -dEntropy;
                 dAvg += dEntropy;
