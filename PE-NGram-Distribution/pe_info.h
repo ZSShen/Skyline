@@ -13,7 +13,7 @@ typedef struct _PEHeader {
 
 /* Structure to store the entroy data of a section. */
 typedef struct _EntropyInfo {
-    ulong   ulSizeArray;
+    ulong   ulNumBlks;
     double  *arrEntropy;
     double  dMaxEntropy, dAvgEntropy, dMinEntropy;
 } EntropyInfo;
@@ -41,9 +41,10 @@ typedef struct _PEInfo {
     PEHeader      *pPEHeader;
     SectionInfo   **arrSectionInfo;
 
-    int     (*openSample)   (struct _PEInfo*, const char*);
-    int     (*parseHeaders) (struct _PEInfo*);
-    void    (*dump)         (struct _PEInfo*);
+    int     (*openSample)              (struct _PEInfo*, const char*);
+    int     (*parseHeaders)            (struct _PEInfo*);
+    int     (*calculateSectionEntropy) (struct _PEInfo*);
+    void    (*dump)                    (struct _PEInfo*);
 } PEInfo;
 
 
@@ -88,10 +89,23 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath);
  * This function collects the information from MZ header, PE header, PE option header,
  * and all the section headers.
  *
+ * @param   self            The pointer to the PEInfo structure.
+ *
  * @return                  0: The information is collected successfully.
- *                        < 0: No enough memory space for information collection.
+ *                        < 0: Exception occurs while file accessing or memory allocation.
  */
 int PEInfoParseHeaders(PEInfo *self);
+
+
+/**
+ * This function calculates and collects the entropy data of each section.
+ *
+ * @param   self            The pointer to the PEInfo structure.
+ *
+ * @param                   0: The entropy data is collected successfully.
+ *                        < 0: Exception occurs while file accessing or memory allocation.
+ */
+int PEInfoCalculateSectionEntropy(PEInfo *self);
 
 
 /**
@@ -102,7 +116,6 @@ int PEInfoParseHeaders(PEInfo *self);
 void PEInfoDump(PEInfo *self);
 
 /*
-int PEInfoCalculateSectionEntropy(PEInfo*);
 int PEInfoCollectNGramTokens(PEInfo*, int);
 int FuncCompareNGramToken(const void*, const void*);
 */

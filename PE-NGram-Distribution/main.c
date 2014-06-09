@@ -24,8 +24,12 @@ int main(int argc, char **argv) {
     if (rc != 0)
         goto EXIT;
 
-    pPEInfo->dump(pPEInfo);
-
+    /* Calculate and collect entropy data for each section. */
+    rc = pPEInfo->calculateSectionEntropy(pPEInfo);
+    if (rc != 0)
+        goto EXIT;
+    
+    //pPEInfo->dump(pPEInfo);
 EXIT:
     /* Deinitialize the PEInfo structure. */
     PEInfo_deinit(pPEInfo);

@@ -2,7 +2,6 @@
 #include "except.h"
 #include "pe_info.h"
 
-
 void PEInfoInit(PEInfo *self) {
     
     self->szSampleName = NULL;
@@ -13,6 +12,7 @@ void PEInfoInit(PEInfo *self) {
     /* Let the function pointers point to the corresponding functions. */
     self->openSample = PEInfoOpenSample;
     self->parseHeaders = PEInfoParseHeaders;
+    self->calculateSectionEntropy = PEInfoCalculateSectionEntropy;
     self->dump = PEInfoDump;
 
     return;
@@ -20,7 +20,8 @@ void PEInfoInit(PEInfo *self) {
 
 
 void PEInfoDeinit(PEInfo *self) {
-    int i;
+    int  i;
+    EntropyInfo *pEntropyInfo;
 
     if (self->szSampleName != NULL)
         Free(self->szSampleName);
@@ -31,8 +32,18 @@ void PEInfoDeinit(PEInfo *self) {
     /* Free all the SectionInfo structures. */
     if (self->arrSectionInfo != NULL) {
         for (i = 0 ; i < self->pPEHeader->ulNumSections ; i++) {
-            if (self->arrSectionInfo[i] != NULL)        
+            if (self->arrSectionInfo[i] != NULL) {
+
+                /* Free the EntropyInfo structure. */                
+                pEntropyInfo = self->arrSectionInfo[i]->pEntropyInfo;
+                if (pEntropyInfo != NULL) {
+                    if (pEntropyInfo->arrEntropy != NULL)
+                        Free(pEntropyInfo->arrEntropy);
+                    Free(pEntropyInfo);                
+                }                
+
                 Free(self->arrSectionInfo[i]);
+            }
         }
         Free(self->arrSectionInfo);    
     }
@@ -230,6 +241,106 @@ EXIT:
 
 
 /**
+ * PEInfoCalculateSectionEntropy(): Calculate and collect the entropy data of each section.
+ */
+int PEInfoCalculateSectionEntropy(PEInfo *self) {
+    int         rc, i, j, idxBlk;
+    ulong       ulRawSize, ulRawOffset, ulCurrRead;
+    size_t      nRealRead, nExptRead;
+    double      dEntropy, dMax, dAvg, dMin, dProb, dLogProb, dLogBase;
+    SectionInfo *pSection;
+    uchar       buf[ENTROPY_BLK_SIZE], refFreq[ENTROPY_BLK_SIZE];
+    
+    try {
+        rc = 0;
+
+        for (i = 0 ; i < self->pPEHeader->ulNumSections ; i++) {
+            pSection = self->arrSectionInfo[i];
+
+            ulRawSize = pSection->ulRawSize;
+            ulRawOffset = pSection->ulRawOffset;
+            
+            /* Skip the empty section. */
+            if (ulRawSize == 0)
+                continue;
+                
+            /* Move to the starting offset of the current section. */
+            Fseek(self->fpSample, ulRawOffset, SEEK_SET);
+            
+            /* Create the EntropyInfo structure. */
+            pSection->pEntropyInfo = (EntropyInfo*)Malloc(sizeof(EntropyInfo));
+            pSection->pEntropyInfo->arrEntropy = NULL;
+
+            if ((ulRawSize % ENTROPY_BLK_SIZE) == 0)
+                pSection->pEntropyInfo->ulNumBlks = ulRawSize / ENTROPY_BLK_SIZE;
+            else
+                pSection->pEntropyInfo->ulNumBlks = ulRawSize / ENTROPY_BLK_SIZE + 1;
+
+            pSection->pEntropyInfo->arrEntropy = (double*)Calloc(pSection->pEntropyInfo->ulNumBlks, sizeof(double));
+            
+            //------------------------------------------------
+            //  Main part of the entorpy calculation.
+            //------------------------------------------------
+            ulCurrRead = 0;
+            idxBlk = 0;
+            dMax = -1;
+            dMin = 10;
+            dAvg = 0;
+
+            while (ulCurrRead < ulRawSize) {
+
+                /* Read a block of binary. */
+                nExptRead = ((ulRawSize - ulCurrRead) < ENTROPY_BLK_SIZE)? (ulRawSize - ulCurrRead) : ENTROPY_BLK_SIZE;
+                memset(buf, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
+                nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
+                if (nExptRead != nRealRead) {
+                    Log1("Invalid PE file (Invalid section \"%s\").\n", pSection->uszNormalizedName);
+                    rc = -1;
+                    goto EXIT;
+                }
+  
+                /* Record the number of appearence times of each unique byte. */
+                memset(refFreq, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
+                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) 
+                    refFreq[buf[j]]++;
+
+                /* Calculate the entropy for this block. */                    
+                dEntropy = 0;
+                dLogBase = log10(ENTROPY_LOG_BASE);
+                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) {
+                    dProb = (double)refFreq[j] / (double)ENTROPY_BLK_SIZE;
+                    //dLogProb = (dProb > 0)? (log(dProb) / dLogBase) : 0;
+                    //dEntropy += dProb * dLogProb;
+                }
+                dEntropy = -dEntropy;
+                dAvg += dEntropy;
+
+                if (dEntropy > dMax)
+                    dMax = dEntropy;
+                if (dEntropy < dMin)
+                    dMin = dEntropy;
+                
+                pSection->pEntropyInfo->arrEntropy[idxBlk++] = dEntropy;
+                ulCurrRead += nRealRead;
+            }
+            
+            pSection->pEntropyInfo->dMaxEntropy = dMax;
+            pSection->pEntropyInfo->dMinEntropy = dMin;
+            pSection->pEntropyInfo->dAvgEntropy = dAvg / idxBlk;
+        }
+    } catch(EXCEPT_IO_FILE_READ) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_SEEK) {
+        Log0("Invalid PE file (The target section can not be reached).\n");
+        rc = -1;
+    } end_try;
+
+EXIT:
+    return rc;
+}
+
+
+/**
  * PEInfoDump(): Dump the information recorded from the input sample for debug.
  */
 void PEInfoDump(PEInfo *self) {
@@ -254,6 +365,7 @@ void PEInfoDump(PEInfo *self) {
     
     return;
 }
+
 
 /*
 int PEInfoInit(PEInfo **pSelf, const char *szInput) {
@@ -357,103 +469,5 @@ int PEInfoUninit(PEInfo *self) {
     }
     
     return 0;
-}
-
-
-
-int PEInfoCalculateSectionEntropy(PEInfo *self) {
-    int         i, j, iRet, iRealRead, iExptRead, idxBlk;
-    ulong       ulRawSize, ulRawOffset, ulCurrentRead;
-    double      dEntropy, dMax, dAvg, dMin, dProb, dLogProb, dLogBase;
-    SectionInfo *pSection;
-    uchar       buf[ENTROPY_BLK_SIZE], refEntropy[ENTROPY_BLK_SIZE];
-    
-    iRet = 0;
-    try {
-        for (i = 0 ; i < self->pPEHeader->iCountSections ; i++) {
-            pSection = self->arrSectionInfo[i];
-            
-            ulRawSize = pSection->ulRawSize;
-            ulRawOffset = pSection->ulRawOffset;
-            
-            // Skip the empty section.
-            if (ulRawSize == 0)
-                continue;
-                
-            // Move to the starting offset of the designated section.
-            //printf("0x%08x 0x%08x\n", ulRawSize, ulRawOffset);
-            Fseek(self->fpFile, ulRawOffset, SEEK_SET);
-            
-            // Allocate the memory for EntropyInfo structure.
-            pSection->pEntropyInfo = NULL;
-            pSection->pEntropyInfo = (EntropyInfo*) Malloc(sizeof(EntropyInfo));
-            pSection->pEntropyInfo->arrEntropy = NULL;
-            if ((ulRawSize % ENTROPY_BLK_SIZE) == 0)
-                pSection->pEntropyInfo->ulSizeArray = ulRawSize / ENTROPY_BLK_SIZE;
-            else
-                pSection->pEntropyInfo->ulSizeArray = ulRawSize / ENTROPY_BLK_SIZE + 1;
-            pSection->pEntropyInfo->arrEntropy = NULL;
-            pSection->pEntropyInfo->arrEntropy = (double*) Calloc(sizeof(double), pSection->pEntropyInfo->ulSizeArray);
-            
-            // Start the entropy calculation.
-            ulCurrentRead = 0;
-            idxBlk = 0;
-            dMax = -1;
-            dMin = 10;
-            dAvg = 0;
-            while (ulCurrentRead < ulRawSize) {
-                iExptRead = ENTROPY_BLK_SIZE;
-                if ((ulRawSize - ulCurrentRead) < iExptRead) 
-                    iExptRead = ulRawSize - ulCurrentRead;
-                
-                // Read a chunk of binary.
-                memset(buf, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
-                iRealRead = Fread(buf, sizeof(uchar), iExptRead, self->fpFile);
-                if (iExptRead != iRealRead) {
-                    Log1("Invalid PE file (Invalid section \"%s\").\n", pSection->szNormalizedName);
-                    iRet = -1;
-                    goto EXIT;
-                }
-  
-                // Calculate the entropy for this data chunk.
-                memset(refEntropy, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
-                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) 
-                    refEntropy[buf[j]]++;
-                    
-                dEntropy = 0;
-                dLogBase = log(ENTROPY_LOG_BASE);
-                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) {
-                    dProb = (double)refEntropy[j] / (double)ENTROPY_BLK_SIZE;
-                    if (dProb > 0)
-                        dLogProb = (double)log(dProb) / (double)dLogBase;
-                    else
-                        dLogProb = 0;
-                    dEntropy += dProb * dLogProb;
-                }
-                dEntropy = -dEntropy;
-                
-                dAvg += dEntropy;
-                if (dEntropy > dMax)
-                    dMax = dEntropy;
-                if (dEntropy < dMin)
-                    dMin = dEntropy;
-                
-                pSection->pEntropyInfo->arrEntropy[idxBlk++] = dEntropy;
-                ulCurrentRead += iRealRead;
-            }
-            
-            pSection->pEntropyInfo->dMaxEntropy = dMax;
-            pSection->pEntropyInfo->dMinEntropy = dMin;
-            pSection->pEntropyInfo->dAvgEntropy = dAvg / idxBlk;
-        }
-    } catch(EXCEPT_IO_FILE_READ) {
-        iRet = -1;
-    } catch(EXCEPT_IO_FILE_SEEK) {
-        Log0("Invalid PE file (The target section can not be reached).\n");
-        iRet = -1;
-    } end_try;
-    
-EXIT:
-    return iRet;
 }
 */
