@@ -1,15 +1,19 @@
 #include "util.h"
 #include "except.h"
 #include "pe_info.h"
+#include "region.h"
 
 
 int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput);
 
+int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo);
+
 
 int main(int argc, char **argv) {
-    int         rc;    
-    const char  *cszInput;
-    PEInfo      *pPEInfo;
+    int             rc;    
+    const char      *cszInput;
+    PEInfo          *pPEInfo;
+    RegionCollector *pRegionCollector;
 
     rc = 0;
     cszInput = argv[1];    
@@ -20,6 +24,14 @@ int main(int argc, char **argv) {
         goto FREE_PE;
 
     /* Select the features for n-gram model generation. */
+    rc = select_features(&pRegionCollector, NULL, pPEInfo);
+    if (rc != 0)
+        goto FREE_RC;
+
+
+    /* Deinitialize the RegionCollector structure. */
+FREE_RC:
+    RegionCollector_deinit(pRegionCollector);
 
     /* Deinitialize the PEInfo structure. */
 FREE_PE:
@@ -55,5 +67,19 @@ int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
         goto EXIT;
 
 EXIT:
+    return rc;
+}
+
+
+int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo) {
+    int     rc;
+    RegionCollector *pRegionCollector;
+
+    rc = 0;    
+
+    /* Initialize the RegionCollector structure. */
+    RegionCollector_init(*ppRegionCollector);
+    pRegionCollector = *ppRegionCollector;
+
     return rc;
 }

@@ -28,17 +28,17 @@ typedef struct _RegionCollector {
 } RegionCollector;
 
 
-/* Wrapper for RegionSelector initialization. */
-#define RegionSelector_init(p)      try { \
-                                        p = (RegionSelector*)Malloc(sizeof(RegionSelector)); \
+/* Wrapper for RegionCollector initialization. */
+#define RegionCollector_init(p)      try { \
+                                        p = (RegionCollector*)Malloc(sizeof(RegionCollector)); \
                                         RCInit(p); \
                                     } catch (EXCEPT_MEM_ALLOC) { \
                                         p = NULL; \
                                     } end_try; 
 
 
-/* Wrapper for RegionSelector deinitialization. */
-#define RegionSelector_deinit(p)    if (p != NULL) { \
+/* Wrapper for RegionCollector deinitialization. */
+#define RegionCollector_deinit(p)    if (p != NULL) { \
                                         RCDeinit(p); \
                                         Free(p); \
                                         p = NULL; \

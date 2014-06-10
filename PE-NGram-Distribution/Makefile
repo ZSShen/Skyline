@@ -1,8 +1,8 @@
-main: util.o except.o pe_info.o main.o 
-	gcc -o ngram_distribution main.o util.o except.o pe_info.o -lm
+main: util.o except.o pe_info.o region.o main.o 
+	gcc -o ngram_distribution main.o util.o except.o pe_info.o region.o -lm
 
-debug: util.o except.o pe_info.o main.o
-	gcc -g -o ngram_distribution main.o util.o except.o pe_info.o -lm
+debug: util.o except.o pe_info.o region.o main.o
+	gcc -g -o ngram_distribution main.o util.o except.o pe_info.o region.o -lm
 
 main.o: util.h
 	gcc -c main.c
@@ -16,8 +16,11 @@ util.o: util.h except.h
 pe_info.o: util.h except.h pe_info.h
 	gcc -c pe_info.c
 
+region.o: util.h except.h pe_info.h
+	gcc -c region.c
+
 clean:
-	rm main.o util.o except.o pe_info.o ngram_distribution
+	rm main.o util.o except.o pe_info.o region.o ngram_distribution
 
 run:
 	./ngram_distribution abc
