@@ -81,5 +81,8 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
     RegionCollector_init(*ppRegionCollector);
     pRegionCollector = *ppRegionCollector;
 
+    /* Select the features. */
+    rc = pRegionCollector->selectFeatures(pRegionCollector, cszMethod, pPEInfo);
+
     return rc;
 }

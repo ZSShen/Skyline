@@ -2,6 +2,7 @@
 #define _REGION_H_
 
 #include "util.h"
+#include "except.h"
 #include "pe_info.h"
 
 

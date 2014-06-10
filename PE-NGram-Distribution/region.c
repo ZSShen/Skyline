@@ -62,11 +62,13 @@ void RCDeinit(RegionCollector *self) {
                 listPair = pRegion->listRangePair;
                 while (listPair != NULL) {
                     pPair = listPair->next;
-                    Free(pPair);
+                    Free(listPair);
                     listPair = pPair;
-                } 
+                }
+                Free(pRegion);
             }
         }
+        Free(self->arrRegion);
     }
 
     return;
@@ -93,7 +95,43 @@ int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEIn
  *===========================================================================*/
 
 int _FuncEntirePlanInMaxSec(RegionCollector *self, PEInfo *pPEInfo) {
+    int         rc, i;
+    ushort      usNumRegions, usIdxSection;
+    double      dMax;
+    SectionInfo *pSection;
+    Region      *pRegion;
 
+    rc = 0;
+    self->usNumRegions = 1;
+    try {
+        self->arrRegion = (Region**)Malloc(sizeof(Region*));
+        self->arrRegion[0] = NULL;
 
-    return 0;
+        /* Select the section with maximum average entropy. */            
+        dMax = -1;
+        for (i = 0 ; i < pPEInfo->pPEHeader->usNumSections ; i++) {
+            pSection = pPEInfo->arrSectionInfo[i];            
+            if ((pSection != NULL) && (pSection->ulRawSize != 0)) {
+                if (dMax < pSection->pEntropyInfo->dAvgEntropy) {
+                    dMax = pSection->pEntropyInfo->dAvgEntropy;
+                    usIdxSection = i;
+                }
+            }
+        }
+
+        /* Record the region information. */
+        self->arrRegion[0] = (Region*)Malloc(sizeof(Region));
+        pRegion = self->arrRegion[0];
+        pRegion->usIdxSection = usIdxSection;
+        pRegion->listRangePair = NULL;
+
+        pRegion->listRangePair = (RangePair*)Malloc(sizeof(RangePair));
+        pRegion->listRangePair->ulIdxBgn = 0;
+        pRegion->listRangePair->ulIdxEnd = pPEInfo->arrSectionInfo[usIdxSection]->pEntropyInfo->ulNumBlks;
+        pRegion->listRangePair->next = NULL;
+    } catch(EXCEPT_MEM_ALLOC) {
+        rc = -1;
+    } end_try;
+
+    return rc;
 }
