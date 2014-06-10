@@ -31,7 +31,7 @@ void PEInfoDeinit(PEInfo *self) {
     
     /* Free all the SectionInfo structures. */
     if (self->arrSectionInfo != NULL) {
-        for (i = 0 ; i < self->pPEHeader->ulNumSections ; i++) {
+        for (i = 0 ; i < self->pPEHeader->usNumSections ; i++) {
             if (self->arrSectionInfo[i] != NULL) {
 
                 /* Free the EntropyInfo structure. */                
@@ -153,7 +153,7 @@ int PEInfoParseHeaders(PEInfo *self) {
             ulWord <<= SHIFT_RANGE_8BIT;
             ulWord += buf[PE_HEADER_OFF_NUMBER_OF_SECTIONS + DATATYPE_SIZE_WORD - i] & 0xff;
         }
-        self->pPEHeader->ulNumSections = ulWord;
+        self->pPEHeader->usNumSections = ulWord;
 
         /* Resolve the size of optional header. */
         ulWord = 0;
@@ -170,7 +170,7 @@ int PEInfoParseHeaders(PEInfo *self) {
         //  Examine all the section headers.
         //------------------------------------------------
         /* Create the array to store the SectionInfo structure for each section. */
-        ulWord = self->pPEHeader->ulNumSections;
+        ulWord = self->pPEHeader->usNumSections;
         self->arrSectionInfo = (SectionInfo**)Calloc(ulWord, sizeof(SectionInfo*));
         memset(self->arrSectionInfo, (uint)NULL, sizeof(SectionInfo*) * ulWord);
         
@@ -254,7 +254,7 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
     try {
         rc = 0;
 
-        for (i = 0 ; i < self->pPEHeader->ulNumSections ; i++) {
+        for (i = 0 ; i < self->pPEHeader->usNumSections ; i++) {
             pSection = self->arrSectionInfo[i];
 
             ulRawSize = pSection->ulRawSize;
@@ -345,15 +345,15 @@ EXIT:
  */
 void PEInfoDump(PEInfo *self) {
     int         i, j;    
-    ushort      ulNumSections;
+    ushort      usNumSections;
     SectionInfo *pSection;
     EntropyInfo *pEntropyInfo;    
 
     printf("Sample Name: %s\n", self->szSampleName);
-    ulNumSections = self->pPEHeader->ulNumSections;
-    printf("Total: %d sections\n\n", ulNumSections);
+    usNumSections = self->pPEHeader->usNumSections;
+    printf("Total: %d sections\n\n", usNumSections);
 
-    for (i = 0 ; i < ulNumSections ; i++) {
+    for (i = 0 ; i < usNumSections ; i++) {
         pSection = self->arrSectionInfo[i];
         if (pSection != NULL) {        
             printf("Section    #%d\n", i);

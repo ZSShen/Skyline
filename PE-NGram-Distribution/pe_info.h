@@ -7,7 +7,7 @@
 /* Structure to store the PE header information. */
 typedef struct _PEHeader {
     ulong   ulHeaderOffset;
-    ushort  ulNumSections;
+    ushort  usNumSections;
 } PEHeader;
 
 
