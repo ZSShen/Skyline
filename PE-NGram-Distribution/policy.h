@@ -3,9 +3,9 @@
 
 #include "util.h"
 
-typedef struct RangePair_ {
+typedef struct _RangePair {
     ulong               idxBgn, idxEnd;
-    struct RangePair_   *next;
+    struct _RangePair   *next;
 } RangePair;
 
 typedef struct Region_ {

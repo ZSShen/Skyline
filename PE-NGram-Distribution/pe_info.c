@@ -347,20 +347,30 @@ void PEInfoDump(PEInfo *self) {
     int         i, j;    
     ushort      ulNumSections;
     SectionInfo *pSection;
-    
-    printf("Sample Name: %s\n", self->szSampleName);
+    EntropyInfo *pEntropyInfo;    
 
+    printf("Sample Name: %s\n", self->szSampleName);
     ulNumSections = self->pPEHeader->ulNumSections;
     printf("Total: %d sections\n\n", ulNumSections);
+
     for (i = 0 ; i < ulNumSections ; i++) {
         pSection = self->arrSectionInfo[i];
-        
-        printf("Section    Name: %s\n", pSection->uszNormalizedName);
-        printf("Characteristics: 0x%08lx\n", pSection->ulCharacteristics);
-        printf("Raw      Offset: 0x%08lx\n", pSection->ulRawOffset);
-        printf("Raw        Size: 0x%08lx\n", pSection->ulRawSize);
+        if (pSection != NULL) {        
+            printf("Section    #%d\n", i);
+            printf("Section    Name: %s\n", pSection->uszNormalizedName);
+            printf("Characteristics: 0x%08lx\n", pSection->ulCharacteristics);
+            printf("Raw      Offset: 0x%08lx\n", pSection->ulRawOffset);
+            printf("Raw        Size: 0x%08lx\n", pSection->ulRawSize);
 
-        printf("\n");
+            pEntropyInfo = pSection->pEntropyInfo;
+            printf("Max Entropy: %.3lf\n", pEntropyInfo->dMaxEntropy);
+            printf("Avg Entropy: %.3lf\n", pEntropyInfo->dAvgEntropy);
+            printf("Min Entropy: %.3lf\n", pEntropyInfo->dMinEntropy);
+            for (j = 0 ; j < pEntropyInfo->ulNumBlks ; j++)
+                printf("\t%d\t%.3lf\n", j, pEntropyInfo->arrEntropy[j]);
+            
+            printf("\n");
+        }
     }
     
     return;
