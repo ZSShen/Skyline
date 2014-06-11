@@ -2,11 +2,19 @@
 #include "except.h"
 #include "pe_info.h"
 #include "region.h"
+#include "ngram.h"
 
 
+/* Bundle operations to manipulate PEInfo structure and parse input sample. */
 int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput);
 
+
+/* Bundle operations to manipulate RegionCollector structure and select the user-specified features. */
 int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo);
+
+
+/* Bundle operations to manipulate NGram structure and generate the user-specified model. */
+int generate_model(NGram **ppNGram, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
 int main(int argc, char **argv) {
@@ -14,6 +22,7 @@ int main(int argc, char **argv) {
     const char      *cszInput;
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
+    NGram           *pNGram;
 
     rc = 0;
     cszInput = argv[1];    
@@ -28,7 +37,14 @@ int main(int argc, char **argv) {
     if (rc != 0)
         goto FREE_RC;
 
+    /* Generate the model with the selected features. */
+    rc = generate_model(&pNGram, NULL, pPEInfo, pRegionCollector);
+    if (rc != 0)
+        goto FREE_NG;
 
+    /* Deinitialize the NGram structure. */
+FREE_NG:
+    NGram_deinit(pNGram);
     /* Deinitialize the RegionCollector structure. */
 FREE_RC:
     RegionCollector_deinit(pRegionCollector);
@@ -83,6 +99,23 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
 
     /* Select the features. */
     rc = pRegionCollector->selectFeatures(pRegionCollector, cszMethod, pPEInfo);
+
+    return rc;
+}
+
+
+int generate_model(NGram **ppNGram, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+    int     rc;
+    NGram   *pNGram;
+
+    rc = 0;
+
+    /* Initialize the NGram structure. */
+    NGram_init(*ppNGram);
+    pNGram = *ppNGram;
+
+    /* Generate the model. */
+    rc = pNGram->generateModel(pNGram, cszMethod, pPEInfo, pRegionCollector);
 
     return rc;
 }
