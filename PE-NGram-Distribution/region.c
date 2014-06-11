@@ -102,12 +102,12 @@ int _FuncEntirePlanInMaxSec(RegionCollector *self, PEInfo *pPEInfo) {
     Region      *pRegion;
 
     rc = 0;
-    self->usNumRegions = 1;
     try {
+        /* Only the section with maximum average entropy will be selected. */
+        self->usNumRegions = 1;
         self->arrRegion = (Region**)Malloc(sizeof(Region*));
         self->arrRegion[0] = NULL;
 
-        /* Select the section with maximum average entropy. */            
         dMax = -1;
         for (i = 0 ; i < pPEInfo->pPEHeader->usNumSections ; i++) {
             pSection = pPEInfo->arrSectionInfo[i];            

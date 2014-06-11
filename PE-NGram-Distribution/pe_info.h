@@ -28,12 +28,6 @@ typedef struct _SectionInfo {
 } SectionInfo;
 
 
-/* Structure to store the n-gram token. */
-typedef struct _NGramToken {
-    ulong ulValue, ulFrequency;
-} NGramToken;
-
-
 /* Structure to store the complete analysis result for a PE file. */
 typedef struct _PEInfo {
     char          *szSampleName;
@@ -114,11 +108,5 @@ int PEInfoCalculateSectionEntropy(PEInfo *self);
  * @param   self            The pointer to the PEInfo structure.
  */
 void PEInfoDump(PEInfo *self);
-
-/*
-int PEInfoCollectNGramTokens(PEInfo*, int);
-int FuncCompareNGramToken(const void*, const void*);
-*/
-
 
 #endif

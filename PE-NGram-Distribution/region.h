@@ -61,7 +61,7 @@ void RCDeinit(RegionCollector *self);
  * @param   cszMethod   The string describing the feature selection method.
  * @param   pPEInfo     The pointer to the to be analyzed PEInfo structure. 
  *
- * @return              0: The features ara collected successfully.
+ * @return              0: The features are collected successfully.
  *                    < 0: Exception occurs while memory allocation.
  */
 int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEInfo);
