@@ -4,6 +4,19 @@
  *                  Definition for internal functions                        *
  *===========================================================================*/
 
+/**
+ * This function generates the model by sorting the appearance frequencies of n-gram tokens
+ * with descending order.
+ *
+ * @param   self                The pointer to the NGram structure.
+ * @param   cszMethod           The string describing the model generation method.
+ * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure. 
+ * @param   pRegionCollector    The pointer to the RegionCollector structure which stores all the selected features.
+ *
+ * @return                      0: The model is generated successfully.
+ *                            < 0: Exception occurs while memory allocation.
+ */
+int _FuncTokenFreqDescOrder(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
 /*===========================================================================*
@@ -28,13 +41,13 @@ void NGramDeinit(NGram *self) {
     TokenSet *pTokenSet;
 
     if (self->arrTokenSet != NULL) {
-
-        /* Free all the TokenSet structures. */              
         for (i = 0 ; i < self->usNumSets ; i++) {
+
+            /* Free the TokenSet structure. */  
             if (self->arrTokenSet[i] != NULL) {
                 pTokenSet = self->arrTokenSet[i];               
 
-                /* Free all the Token records. */
+                /* Free the array of Token structures. */
                 if (pTokenSet->arrToken != NULL) {
                     for (j = 0 ; j < pTokenSet->ulNumTokens ; j++) {
                         if (pTokenSet->arrToken[j] != NULL)
@@ -64,3 +77,8 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
 /*===========================================================================*
  *                Implementation for internal functions                      *
  *===========================================================================*/
+
+int _FuncTokenFreqDescOrder(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+
+    return 0;
+}

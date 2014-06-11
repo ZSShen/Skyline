@@ -30,6 +30,23 @@ typedef struct _NGram {
 } NGram;
 
 
+/* Wrapper for NGram initialization. */
+#define NGram_init(p)       try { \
+                                p = (NGram*)Malloc(sizeof(NGram)); \
+                                NGramInit(p); \
+                            } catch (EXCEPT_MEM_ALLOC) { \
+                                p = NULL; \
+                            } end_try;
+
+
+/* Wrapper for NGram deinitialization. */
+#define NGram_deinit(p)     if (p != NULL) { \
+                                NGramDeinit(p); \
+                                Free(p); \
+                                p = NULL; \
+                            }
+
+
 /* Constructor for the NGram structure. */
 void NGramInit(NGram *self);
 
