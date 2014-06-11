@@ -8,15 +8,15 @@
 
 /* Structure to record the range of binary. */
 typedef struct _RangePair {
-    ulong             ulIdxBgn, ulIdxEnd;
-    struct _RangePair *next;
+    ulong ulIdxBgn, ulIdxEnd;
 } RangePair;
 
 
 /* Structure to the features collected within a section. */
 typedef struct _Region {
     ushort      usIdxSection;
-    RangePair   *listRangePair;
+    ulong       ulNumPairs;
+    RangePair   **arrRangePair;
 } Region;
 
 
@@ -30,7 +30,7 @@ typedef struct _RegionCollector {
 
 
 /* Wrapper for RegionCollector initialization. */
-#define RegionCollector_init(p)      try { \
+#define RegionCollector_init(p)     try { \
                                         p = (RegionCollector*)Malloc(sizeof(RegionCollector)); \
                                         RCInit(p); \
                                     } catch (EXCEPT_MEM_ALLOC) { \
@@ -39,7 +39,7 @@ typedef struct _RegionCollector {
 
 
 /* Wrapper for RegionCollector deinitialization. */
-#define RegionCollector_deinit(p)    if (p != NULL) { \
+#define RegionCollector_deinit(p)   if (p != NULL) { \
                                         RCDeinit(p); \
                                         Free(p); \
                                         p = NULL; \

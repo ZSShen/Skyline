@@ -47,9 +47,8 @@ void RCInit(RegionCollector *self) {
 
 
 void RCDeinit(RegionCollector *self) {
-    int       i;
-    Region    *pRegion;
-    RangePair *listPair, *pPair;
+    int     i, j;
+    Region  *pRegion;
 
     if (self->arrRegion != NULL) {
         for (i = 0 ; i < self->usNumRegions ; i++) {
@@ -58,13 +57,14 @@ void RCDeinit(RegionCollector *self) {
             pRegion = self->arrRegion[i];
             if (pRegion != NULL) {
 
-                /* Free the list of RangePair structures. */
-                listPair = pRegion->listRangePair;
-                while (listPair != NULL) {
-                    pPair = listPair->next;
-                    Free(listPair);
-                    listPair = pPair;
-                }
+                /* Free the array of RangePair structures. */
+                if (pRegion->arrRangePair != NULL) {
+                    for (j = 0 ; j < pRegion->ulNumPairs ; j++) {
+                        if (pRegion->arrRangePair[j] != NULL)
+                            Free(pRegion->arrRangePair[j]);                    
+                    }
+                    Free(pRegion->arrRangePair);
+                } 
                 Free(pRegion);
             }
         }
@@ -123,12 +123,16 @@ int _FuncEntirePlanInMaxSec(RegionCollector *self, PEInfo *pPEInfo) {
         self->arrRegion[0] = (Region*)Malloc(sizeof(Region));
         pRegion = self->arrRegion[0];
         pRegion->usIdxSection = usIdxSection;
-        pRegion->listRangePair = NULL;
+        pRegion->arrRangePair = NULL;
 
-        pRegion->listRangePair = (RangePair*)Malloc(sizeof(RangePair));
-        pRegion->listRangePair->ulIdxBgn = 0;
-        pRegion->listRangePair->ulIdxEnd = pPEInfo->arrSectionInfo[usIdxSection]->pEntropyInfo->ulNumBlks;
-        pRegion->listRangePair->next = NULL;
+        pRegion->arrRangePair = (RangePair**)Malloc(sizeof(RangePair*));
+        pRegion->ulNumPairs = 0;
+        pRegion->arrRangePair[0] = NULL;
+
+        pRegion->arrRangePair[0] = (RangePair*)Malloc(sizeof(RangePair));
+        pRegion->ulNumPairs = 1;        
+        pRegion->arrRangePair[0]->ulIdxBgn = 0;
+        pRegion->arrRangePair[0]->ulIdxEnd = pPEInfo->arrSectionInfo[usIdxSection]->pEntropyInfo->ulNumBlks;
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;
     } end_try;
