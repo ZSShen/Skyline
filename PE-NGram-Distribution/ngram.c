@@ -1,4 +1,10 @@
 #include "ngram.h"
+/*===========================================================================*
+ *                  Simulation for private variables                         *
+ *===========================================================================*/
+/* The maximum value of the n-gram token with the specified dimension. */
+ulong _ulMaxValue;
+
 
 /*===========================================================================*
  *                  Definition for internal functions                        *
@@ -9,14 +15,13 @@
  * with descending order.
  *
  * @param   self                The pointer to the NGram structure.
- * @param   cszMethod           The string describing the model generation method.
  * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure. 
  * @param   pRegionCollector    The pointer to the RegionCollector structure which stores all the selected features.
  *
  * @return                      0: The model is generated successfully.
  *                            < 0: Exception occurs while memory allocation.
  */
-int _FuncTokenFreqDescOrder(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
+int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
 /*===========================================================================*
@@ -26,8 +31,8 @@ int _FuncTokenFreqDescOrder(NGram *self, const char *cszMethod, PEInfo *pPEInfo,
 void NGramInit(NGram *self) {
 
     /* Initialize member variables. */
-    self->usNumSets = 0;
-    self->arrTokenSet = NULL;
+    self->ulNumTokens = 0;
+    self->arrToken = NULL;
 
     /* Assign the default member functions */
     self->generateModel = NGramGenerateModel;    
@@ -37,28 +42,17 @@ void NGramInit(NGram *self) {
 
 
 void NGramDeinit(NGram *self) {
-    int      i, j;
-    TokenSet *pTokenSet;
+    int     i;
+    Token   *pToken;
 
-    if (self->arrTokenSet != NULL) {
-        for (i = 0 ; i < self->usNumSets ; i++) {
-
-            /* Free the TokenSet structure. */  
-            if (self->arrTokenSet[i] != NULL) {
-                pTokenSet = self->arrTokenSet[i];               
-
-                /* Free the array of Token structures. */
-                if (pTokenSet->arrToken != NULL) {
-                    for (j = 0 ; j < pTokenSet->ulNumTokens ; j++) {
-                        if (pTokenSet->arrToken[j] != NULL)
-                            Free(pTokenSet->arrToken[j]);
-                    }                        
-                    Free(pTokenSet->arrToken);
-                }
-                Free(pTokenSet);
-            }
+    if (self->arrToken != NULL) {
+        /* Free the array of Token structures. */
+        for (i = 0 ; i < self->ulNumTokens ; i++) {
+            pToken = self->arrToken[i];
+            if (pToken != NULL)
+                Free(pToken);
         }
-        Free(self->arrTokenSet);
+        Free(self->arrToken);
     }
 
     return;
@@ -70,6 +64,9 @@ void NGramDeinit(NGram *self) {
  */
 int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
 
+    if (cszMethod == NULL)
+        _FuncTokenFreqDescOrder(self, pPEInfo, pRegionCollector);
+
     return 0;
 }
 
@@ -78,7 +75,9 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
  *                Implementation for internal functions                      *
  *===========================================================================*/
 
-int _FuncTokenFreqDescOrder(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+
+    
 
     return 0;
 }

@@ -12,19 +12,10 @@ typedef struct _Token {
 } Token;
 
 
-/* Structure to store all the ngram tokens of a specific section. */
-typedef struct _TokenSet {
-    ushort  usIdxSection;
-    ulong   ulNumTokens;
-    Token   **arrToken;
-} TokenSet;
-
-
 /* Structure to store all the information of n-gram model for the input sample. */
 typedef struct _NGram {
-    ushort      usNumSets;
-    ulong       ulValueSpace;
-    TokenSet    **arrTokenSet;
+    ulong   ulNumTokens;
+    Token   **arrToken;
 
     int (*generateModel) (struct _NGram*, const char*, PEInfo*, RegionCollector*);
 } NGram;
