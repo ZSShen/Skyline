@@ -14,7 +14,8 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
 
 
 /* Bundle operations to manipulate NGram structure and generate the user-specified model. */
-int generate_model(NGram **ppNGram, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
+int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension, 
+                    PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
 int main(int argc, char **argv) {
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
         goto FREE_RC;
 
     /* Generate the model with the selected features. */
-    rc = generate_model(&pNGram, NULL, pPEInfo, pRegionCollector);
+    rc = generate_model(&pNGram, NULL, 2, pPEInfo, pRegionCollector);
     if (rc != 0)
         goto FREE_NG;
 
@@ -104,7 +105,8 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
 }
 
 
-int generate_model(NGram **ppNGram, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension, 
+                    PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int     rc;
     NGram   *pNGram;
 
@@ -113,6 +115,9 @@ int generate_model(NGram **ppNGram, const char *cszMethod, PEInfo *pPEInfo, Regi
     /* Initialize the NGram structure. */
     NGram_init(*ppNGram);
     pNGram = *ppNGram;
+
+    /* Set the maximum value of a n-gram token. */
+    pNGram->setDimension(pNGram, ucDimension);
 
     /* Generate the model. */
     rc = pNGram->generateModel(pNGram, cszMethod, pPEInfo, pRegionCollector);

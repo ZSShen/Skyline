@@ -17,7 +17,8 @@ typedef struct _NGram {
     ulong   ulNumTokens;
     Token   **arrToken;
 
-    int (*generateModel) (struct _NGram*, const char*, PEInfo*, RegionCollector*);
+    void (*setDimension)  (struct _NGram*, uchar ucDimension);
+    int  (*generateModel) (struct _NGram*, const char*, PEInfo*, RegionCollector*);
 } NGram;
 
 
@@ -47,6 +48,15 @@ void NGramDeinit(NGram *self);
 
 
 /**
+ * This function sets the maximum value of the n-gram token with the specified dimension.
+ *
+ * @param   self            The pointer to the NGram structure.
+ * @param   ucDimension     The user-specified dimension.
+ */
+void NGramSetDimension(NGram *self, uchar ucDimension);
+
+
+/**
  * This function generates the n-gram model based on the specified method.
  *
  * @param   self                The pointer to the NGram structure.
@@ -58,6 +68,7 @@ void NGramDeinit(NGram *self);
  *                            < 0: Exception occurs while memory allocation.
  */
 int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
+
 
 /*===========================================================================*
  *                 Supported Model Generation Methods                        *

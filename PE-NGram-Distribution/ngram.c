@@ -35,6 +35,7 @@ void NGramInit(NGram *self) {
     self->arrToken = NULL;
 
     /* Assign the default member functions */
+    self->setDimension = NGramSetDimension;
     self->generateModel = NGramGenerateModel;    
 
     return;
@@ -55,6 +56,16 @@ void NGramDeinit(NGram *self) {
         Free(self->arrToken);
     }
 
+    return;
+}
+
+
+/**
+ * NGramSetDimension(): Set the maximum value of the n-gram token with the specified dimension.
+ */
+void NGramSetDimension(NGram *self, uchar ucDimension) {
+
+    _ulMaxValue = pow(UNI_GRAM_MAX_VALUE, ucDimension);
     return;
 }
 
