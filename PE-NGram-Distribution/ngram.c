@@ -91,23 +91,22 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
  *===========================================================================*/
 
 int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
-    int     rc, i;
-    ushort  usNumRegions, usShiftPos;
-    Region  *pRegion;
+    int         rc, i, j;
+    uchar       ucIdxBitVF, ucIdxBitVT;
+    ushort      usNumRegions, usShiftPos, usIdxSection;
+    ulong       ulSecRawSize, ulSecRawOffset, ulIdxBgn, ulIdxEnd, ulOstBgn, ulOstEnd;
+    ulong       ulIdxByteRF, ulIdxByteVF, ulIdxByteVT;
+    size_t      nExptRead, nRealRead;
+    Region      *pRegion;
+    RangePair   **arrRangePair;
+    uchar       buf[BUF_SIZE_LARGE];
 
-    int             idxByteVF, idxByteVT, idxBitVF, idxBitVT, idxByteCur, idxBitCur, iSftCount;
-    uchar           ucMask, ucBit;
-    ulong           ulSecRawSize, ulSecRawOffset, ulOffsetBgn, ulOffsetEnd, ulBlkSize;
-    ulong           ulNGramSpace, ulIdxByteRF, ulNGramVal;
-    Region          refRegion;
-    NGramTokenSet   refSet;
-    NGramModel      *pModel;
-    RangePair       *listRangePair;
-    uchar           buf[BUF_SIZE_LARGE];
-    
     rc = 0;
-    
     try {
+        //----------------------------------------------------
+        // First part: Collect and sort the n-gram tokens.
+        //----------------------------------------------------
+
         usNumRegions = pRegionCollector->usNumRegions;
         if (usNumRegions == 0)
             goto EXIT;
@@ -120,36 +119,102 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
             self->arrToken[i] = NULL;
 
         usShiftPos = _ucDimension * SHIFT_RANGE_8BIT;
-
-        /*
+        
         for (i = 0 ; i < usNumRegions ; i++) {
-            refRegion = pPolicyRegion->arrRegion[i];
-            refSet = pModel->arrTokenSet[i];
             
-            // Collect n-gram tokens block by block within the designated section.
-            idxSection = refRegion.idxSection;
-            ulSecRawSize = pPEInfo->arrSectionInfo[idxSection]->ulRawSize;
-            ulSecRawOffset = pPEInfo->arrSectionInfo[idxSection]->ulRawOffset;
+            /* Collect the n-gram tokens block by block within the current region(section). */
+            pRegion = pRegionCollector->arrRegion[i];
+            usIdxSection = pRegion->usIdxSection;
+            ulSecRawSize = pPEInfo->arrSectionInfo[usIdxSection]->ulRawSize;
+            ulSecRawOffset = pPEInfo->arrSectionInfo[usIdxSection]->ulRawOffset;
             
+            arrRangePair = pRegion->arrRangePair;
+            for (j = 0 ; j < pRegion->ulNumPairs ; j++) {
+                ulIdxBgn = arrRangePair[j]->ulIdxBgn;
+                ulIdxEnd = arrRangePair[j]->ulIdxEnd;                
+                
+                /* Transform the data block index to the raw binary offset. */
+                ulOstBgn = ulSecRawSize + ulIdxBgn * ENTROPY_BLK_SIZE;
+                ulOstEnd = ulSecRawSize + ulIdxEnd * ENTROPY_BLK_SIZE;
+                
+                //----------------------------------------------------
+                // Main algorithm of the n-gram token collection.
+                //----------------------------------------------------
+                /* Preload a chunk of binary. */
+                Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
+                nExptRead = ((ulOstEnd - ulOstBgn) < BUF_SIZE_LARGE)? (ulOstEnd - ulOstBgn) : BUF_SIZE_MID;
+                nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
+
+                ulIdxByteRF = _ulDimension - 1;
+                ulIdxByteVF = ulIdxByteRF;
+                ulIdxByteVT = 0;
+                ucIdxBitVF = 0;
+                ucIdxBitVT = BIT_MOST_SIGNIFICANT;
+                while (TRUE) {
+                    idxByteCur = idxByteVT;
+                    idxBitCur = idxBitVT;
+                    
+                    // Calculate n-gram using the binary within the sliding window.
+                    ulNGramVal = 0;
+                    for (k = 0 ; k < iSftCount ; k++) {
+                        ucMask = 1;
+                        ucMask <<= idxBitCur;
+                        ucBit = buf[idxByteCur] & ucMask;
+                        ucBit >>= idxBitCur;
+                        ulNGramVal = (ulNGramVal << 1) + ucBit; 
+                    
+                        idxBitCur--;
+                        if (idxBitCur < 0) {
+                            idxBitCur = BIT_MOST_SIGNIFICANT;
+                            idxByteCur++;
+                            if (idxByteCur == BUF_SIZE_LARGE)
+                                idxByteCur = 0;
+                        }
+                    }
+                    refSet.arrToken[ulNGramVal].ulValue = ulNGramVal;
+                    refSet.arrToken[ulNGramVal].ulFrequency++;
+                    
+                    // Adjust the front-end location pointers.
+                    idxBitVF--;
+                    if(idxBitVF < 0) {
+                        idxBitVF = BIT_MOST_SIGNIFICANT;
+                        
+                        // Check for the condition to terminate the algorithm.
+                        ulIdxByteRF++;
+                        if(ulIdxByteRF == ulBlkSize)
+                            break;
+
+                        idxByteVF++;
+                        if(idxByteVF == BUF_SIZE_LARGE) {
+                            idxByteVF = 0;
+                            
+                            // Circularly fill the buffer with new chunk of data.
+                            iExptRead = BUF_SIZE_LARGE - iNGramDimension;
+                            iRealRead = Fread(buf, sizeof(uchar), iExptRead, pPEInfo->fpFile);
+                        }        
+                    }
+                    
+                    // Adjust the tail-end location pointer.
+                    idxBitVT--;
+                    if(idxBitVT < 0) {
+                        idxBitVT = BIT_MOST_SIGNIFICANT;
+                        
+                        idxByteVT++;
+                        if(idxByteVT == BUF_SIZE_LARGE) {
+                            idxByteVT = 0;
+                            
+                            // Circularly fill the buffer with new chunk of data.
+                            iExptRead = iNGramDimension;
+                            iRealRead = Fread(buf + BUF_SIZE_LARGE - iNGramDimension, sizeof(uchar), iExptRead, pPEInfo->fpFile);
+                        }
+                    }
+                }
+
+            }
+
+            /*
             listRangePair = refRegion.listRangePair;
             while (listRangePair != NULL) {
-                idxBgn = listRangePair->idxBgn;
-                idxEnd = listRangePair->idxEnd;
-                listRangePair = listRangePair->next;
-
-                printf("0x%08x 0x%08x\n", idxBgn, idxEnd);
-                
-                // Determine the range of binary which should be calculated.
-                ulOffsetBgn = ulSecRawOffset + idxBgn * ENTROPY_BLK_SIZE;
-                ulOffsetEnd = ulSecRawOffset + idxEnd * ENTROPY_BLK_SIZE;
-
-                // Move to the starting offset of this binary block.
-                Fseek(pPEInfo->fpFile, ulOffsetBgn, SEEK_SET);
-                
-                // Pre-load a full line of binary.
-                ulBlkSize = ulOffsetEnd - ulOffsetBgn;
-                iExptRead = (ulBlkSize > BUF_SIZE_LARGE)? BUF_SIZE_LARGE : ulBlkSize;
-                iRealRead = Fread(buf, sizeof(uchar), iExptRead, pPEInfo->fpFile);
                 
                 // Start the n-gram calculation.
                 ulIdxByteRF = iNGramDimension - 1;
@@ -220,14 +285,14 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
             // Sort the n-gram tokens by descending order based on their appearing frequency. 
             qsort(refSet.arrToken, ulNGramSpace, sizeof(NGramToken), FuncCompareTokenDescOrder);
             pModel->arrTokenSet[i] = refSet;
+            */
         }
-        */
     } catch(EXCEPT_MEM_ALLOC) {
-        iRet = -1;        
+        rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {
-        iRet = -1;
+        rc = -1;
     } catch(EXCEPT_IO_FILE_SEEK) {
-        iRet = -1;
+        rc = -1;
     } end_try;
 
 EXIT:    
