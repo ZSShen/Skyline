@@ -92,10 +92,10 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
 
 int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int         rc, i, j;
-    uchar       ucIdxBitVF, ucIdxBitVT;
+    uchar       ucIdxBitVF, ucIdxBitVT, ucIdxBitCur, ucBitVal, ucMask;
     ushort      usNumRegions, usShiftPos, usIdxSection;
-    ulong       ulSecRawSize, ulSecRawOffset, ulIdxBgn, ulIdxEnd, ulOstBgn, ulOstEnd;
-    ulong       ulIdxByteRF, ulIdxByteVF, ulIdxByteVT;
+    ulong       ulSecRawSize, ulSecRawOffset, ulIdxBgn, ulIdxEnd, ulOstBgn, ulOstEnd, ulRegionSize;
+    ulong       ulIdxByteRF, ulIdxByteVF, ulIdxByteVT, ulIdxByteCur, ulTokenVal;
     size_t      nExptRead, nRealRead;
     Region      *pRegion;
     RangePair   **arrRangePair;
@@ -136,13 +136,14 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 /* Transform the data block index to the raw binary offset. */
                 ulOstBgn = ulSecRawSize + ulIdxBgn * ENTROPY_BLK_SIZE;
                 ulOstEnd = ulSecRawSize + ulIdxEnd * ENTROPY_BLK_SIZE;
+                ulRegionSize = ulOstEnd - ulOstBgn;
                 
                 //----------------------------------------------------
                 // Main algorithm of the n-gram token collection.
                 //----------------------------------------------------
                 /* Preload a chunk of binary. */
                 Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
-                nExptRead = ((ulOstEnd - ulOstBgn) < BUF_SIZE_LARGE)? (ulOstEnd - ulOstBgn) : BUF_SIZE_MID;
+                nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_MID;
                 nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
 
                 ulIdxByteRF = _ulDimension - 1;
@@ -151,61 +152,68 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 ucIdxBitVF = 0;
                 ucIdxBitVT = BIT_MOST_SIGNIFICANT;
                 while (TRUE) {
-                    idxByteCur = idxByteVT;
-                    idxBitCur = idxBitVT;
-                    
-                    // Calculate n-gram using the binary within the sliding window.
-                    ulNGramVal = 0;
-                    for (k = 0 ; k < iSftCount ; k++) {
+                    ucIdxBitCurr = ucIdxBitVT;
+                    ulIdxByteCurr = ulIdxByteVT;
+
+                    /* Generate token using the binary within the sliding window. */
+                    ulTokenVal = 0;
+                    for (k = 0 ; k < usShiftPos ; k++) {
                         ucMask = 1;
-                        ucMask <<= idxBitCur;
-                        ucBit = buf[idxByteCur] & ucMask;
-                        ucBit >>= idxBitCur;
-                        ulNGramVal = (ulNGramVal << 1) + ucBit; 
+                        ucMask <<= ucIdxBitCur;
+                        ucBitVal = buf[ulIdxByteCur] & ucMask;
+                        ucBitVal >>= ucIdxBitCur;
+                        ulTokenVal = (ulTokenVal << 1) + ucBitVal; 
                     
-                        idxBitCur--;
-                        if (idxBitCur < 0) {
-                            idxBitCur = BIT_MOST_SIGNIFICANT;
-                            idxByteCur++;
-                            if (idxByteCur == BUF_SIZE_LARGE)
-                                idxByteCur = 0;
+                        ucIdxBitCur--;
+                        if (ucIdxBitCur < 0) {
+                            ucIdxBitCur = BIT_MOST_SIGNIFICANT;
+                            ulIdxByteCur++;
+                            if (ulIdxByteCur == BUF_SIZE_LARGE)
+                                ulIdxByteCur = 0;
                         }
                     }
-                    refSet.arrToken[ulNGramVal].ulValue = ulNGramVal;
-                    refSet.arrToken[ulNGramVal].ulFrequency++;
+
+                    if (self->arrToken[ulTokenVal] == NULL) {
+                        self->arrToken[ulTokenVal] = (Token*)Malloc(sizeof(Token));
+                        self->arrToken[ulTokenVal]->ulValue = ulTokenVal;
+                        self->arrToken[ulTokenVal]->ulFrequency = 0;                    
+                    }
+                    self->arrToken[ulTokenVal]->ulFrequency++;
                     
-                    // Adjust the front-end location pointers.
-                    idxBitVF--;
-                    if(idxBitVF < 0) {
-                        idxBitVF = BIT_MOST_SIGNIFICANT;
+                    /* Adjust the front-end location pointers. */
+                    ucIdxBitVF--;
+                    if(ucIdxBitVF < 0) {
+                        ucIdxBitVF = BIT_MOST_SIGNIFICANT;
                         
-                        // Check for the condition to terminate the algorithm.
+                        /* Check the condition to terminate the algorithm. */
                         ulIdxByteRF++;
-                        if(ulIdxByteRF == ulBlkSize)
+                        if(ulIdxByteRF == ulRegionSize)
                             break;
 
-                        idxByteVF++;
-                        if(idxByteVF == BUF_SIZE_LARGE) {
-                            idxByteVF = 0;
+                        ulIdxByteVF++;
+                        if(ulIdxByteVF == BUF_SIZE_LARGE) {
+                            ulIdxByteVF = 0;
                             
-                            // Circularly fill the buffer with new chunk of data.
-                            iExptRead = BUF_SIZE_LARGE - iNGramDimension;
-                            iRealRead = Fread(buf, sizeof(uchar), iExptRead, pPEInfo->fpFile);
+                            /* Put a new chunk of data to the buffer with offset 
+                               from 0 to (BUF_SIZE_LARGE - _usDimension - 1). */
+                            nExptRead = BUF_SIZE_LARGE - _usDimension;
+                            nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }        
                     }
                     
-                    // Adjust the tail-end location pointer.
-                    idxBitVT--;
-                    if(idxBitVT < 0) {
-                        idxBitVT = BIT_MOST_SIGNIFICANT;
+                    /* Adjust the tail-end location pointer. */
+                    ucIdxBitVT--;
+                    if(ucIdxBitVT < 0) {
+                        ucIdxBitVT = BIT_MOST_SIGNIFICANT;
                         
-                        idxByteVT++;
-                        if(idxByteVT == BUF_SIZE_LARGE) {
-                            idxByteVT = 0;
+                        ulIdxByteVT++;
+                        if(ulIdxByteVT == BUF_SIZE_LARGE) {
+                            ulIdxByteVT = 0;
                             
-                            // Circularly fill the buffer with new chunk of data.
-                            iExptRead = iNGramDimension;
-                            iRealRead = Fread(buf + BUF_SIZE_LARGE - iNGramDimension, sizeof(uchar), iExptRead, pPEInfo->fpFile);
+                            /* Put a new chunk of data to the buffer with offset
+                               from (BUF_SIZE_LARGE - _usDimension) to (BUF_SIZE_LARGE - 1). */
+                            nExptRead = _usDimension;
+                            nRealRead = Fread(buf + BUF_SIZE_LARGE - _usDimension, sizeof(uchar), nExptRead, pPEInfo->fpFile);
                         }
                     }
                 }
@@ -213,75 +221,6 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
             }
 
             /*
-            listRangePair = refRegion.listRangePair;
-            while (listRangePair != NULL) {
-                
-                // Start the n-gram calculation.
-                ulIdxByteRF = iNGramDimension - 1;
-                idxByteVF = ulIdxByteRF;
-                idxByteVT = 0;
-                idxBitVF = 0;
-                idxBitVT = BIT_MOST_SIGNIFICANT;
-                while (TRUE) {
-                    idxByteCur = idxByteVT;
-                    idxBitCur = idxBitVT;
-                    
-                    // Calculate n-gram using the binary within the sliding window.
-                    ulNGramVal = 0;
-                    for (k = 0 ; k < iSftCount ; k++) {
-                        ucMask = 1;
-                        ucMask <<= idxBitCur;
-                        ucBit = buf[idxByteCur] & ucMask;
-                        ucBit >>= idxBitCur;
-                        ulNGramVal = (ulNGramVal << 1) + ucBit; 
-                    
-                        idxBitCur--;
-                        if (idxBitCur < 0) {
-                            idxBitCur = BIT_MOST_SIGNIFICANT;
-                            idxByteCur++;
-                            if (idxByteCur == BUF_SIZE_LARGE)
-                                idxByteCur = 0;
-                        }
-                    }
-                    refSet.arrToken[ulNGramVal].ulValue = ulNGramVal;
-                    refSet.arrToken[ulNGramVal].ulFrequency++;
-                    
-                    // Adjust the front-end location pointers.
-                    idxBitVF--;
-                    if(idxBitVF < 0) {
-                        idxBitVF = BIT_MOST_SIGNIFICANT;
-                        
-                        // Check for the condition to terminate the algorithm.
-                        ulIdxByteRF++;
-                        if(ulIdxByteRF == ulBlkSize)
-                            break;
-
-                        idxByteVF++;
-                        if(idxByteVF == BUF_SIZE_LARGE) {
-                            idxByteVF = 0;
-                            
-                            // Circularly fill the buffer with new chunk of data.
-                            iExptRead = BUF_SIZE_LARGE - iNGramDimension;
-                            iRealRead = Fread(buf, sizeof(uchar), iExptRead, pPEInfo->fpFile);
-                        }        
-                    }
-                    
-                    // Adjust the tail-end location pointer.
-                    idxBitVT--;
-                    if(idxBitVT < 0) {
-                        idxBitVT = BIT_MOST_SIGNIFICANT;
-                        
-                        idxByteVT++;
-                        if(idxByteVT == BUF_SIZE_LARGE) {
-                            idxByteVT = 0;
-                            
-                            // Circularly fill the buffer with new chunk of data.
-                            iExptRead = iNGramDimension;
-                            iRealRead = Fread(buf + BUF_SIZE_LARGE - iNGramDimension, sizeof(uchar), iExptRead, pPEInfo->fpFile);
-                        }
-                    }
-                }
-            }
             // Sort the n-gram tokens by descending order based on their appearing frequency. 
             qsort(refSet.arrToken, ulNGramSpace, sizeof(NGramToken), FuncCompareTokenDescOrder);
             pModel->arrTokenSet[i] = refSet;
