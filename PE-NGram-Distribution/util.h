@@ -15,6 +15,7 @@
 #include <stdarg.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <stdbool.h>
 #include <time.h>
 
 

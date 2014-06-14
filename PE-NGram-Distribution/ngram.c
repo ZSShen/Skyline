@@ -25,6 +25,19 @@ ulong _ulMaxValue;
 int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
+/**
+ * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency.
+ *
+ * @param   pSrc        The pointer to the source token.
+ * @param   pDst        The pointer to the target token.
+ *
+ * @return             < 0: The source token must go before the target one.
+ *                       0: The source and target tokens do not need to change their order.
+ *                     > 0: The source token must go after the target one. 
+ */
+int _CompTokenFreqDescOrder(const void *pSrc, const void *pTge);
+
+
 /*===========================================================================*
  *                Implementation for exported functions                      *
  *===========================================================================*/
@@ -91,7 +104,7 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
  *===========================================================================*/
 
 int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
-    int         rc, i, j;
+    int         rc, i, j, k;
     uchar       ucIdxBitVF, ucIdxBitVT, ucIdxBitCur, ucBitVal, ucMask;
     ushort      usNumRegions, usShiftPos, usIdxSection;
     ulong       ulSecRawSize, ulSecRawOffset, ulIdxBgn, ulIdxEnd, ulOstBgn, ulOstEnd, ulRegionSize;
@@ -134,10 +147,13 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 ulIdxEnd = arrRangePair[j]->ulIdxEnd;                
                 
                 /* Transform the data block index to the raw binary offset. */
-                ulOstBgn = ulSecRawSize + ulIdxBgn * ENTROPY_BLK_SIZE;
-                ulOstEnd = ulSecRawSize + ulIdxEnd * ENTROPY_BLK_SIZE;
+                ulOstBgn = ulSecRawOffset + ulIdxBgn * ENTROPY_BLK_SIZE;
+                ulOstEnd = ulSecRawOffset + ulIdxEnd * ENTROPY_BLK_SIZE;
                 ulRegionSize = ulOstEnd - ulOstBgn;
-                
+
+                printf("%lu %lu %lu\n", ulOstBgn, ulOstEnd, ulRegionSize);                
+
+
                 //----------------------------------------------------
                 // Main algorithm of the n-gram token collection.
                 //----------------------------------------------------
@@ -146,14 +162,14 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_MID;
                 nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
 
-                ulIdxByteRF = _ulDimension - 1;
+                ulIdxByteRF = _ucDimension - 1;
                 ulIdxByteVF = ulIdxByteRF;
                 ulIdxByteVT = 0;
                 ucIdxBitVF = 0;
                 ucIdxBitVT = BIT_MOST_SIGNIFICANT;
-                while (TRUE) {
-                    ucIdxBitCurr = ucIdxBitVT;
-                    ulIdxByteCurr = ulIdxByteVT;
+                while (true) {
+                    ucIdxBitCur = ucIdxBitVT;
+                    ulIdxByteCur = ulIdxByteVT;
 
                     /* Generate token using the binary within the sliding window. */
                     ulTokenVal = 0;
@@ -195,8 +211,8 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                             ulIdxByteVF = 0;
                             
                             /* Put a new chunk of data to the buffer with offset 
-                               from 0 to (BUF_SIZE_LARGE - _usDimension - 1). */
-                            nExptRead = BUF_SIZE_LARGE - _usDimension;
+                               from 0 to (BUF_SIZE_LARGE - _ucDimension - 1). */
+                            nExptRead = BUF_SIZE_LARGE - _ucDimension;
                             nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }        
                     }
@@ -211,21 +227,20 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                             ulIdxByteVT = 0;
                             
                             /* Put a new chunk of data to the buffer with offset
-                               from (BUF_SIZE_LARGE - _usDimension) to (BUF_SIZE_LARGE - 1). */
-                            nExptRead = _usDimension;
-                            nRealRead = Fread(buf + BUF_SIZE_LARGE - _usDimension, sizeof(uchar), nExptRead, pPEInfo->fpFile);
+                               from (BUF_SIZE_LARGE - _ucDimension) to (BUF_SIZE_LARGE - 1). */
+                            nExptRead = _ucDimension;
+                            nRealRead = Fread(buf + BUF_SIZE_LARGE - _ucDimension, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }
                     }
                 }
-
+                /* End of one binary region. */
             }
-
-            /*
-            // Sort the n-gram tokens by descending order based on their appearing frequency. 
-            qsort(refSet.arrToken, ulNGramSpace, sizeof(NGramToken), FuncCompareTokenDescOrder);
-            pModel->arrTokenSet[i] = refSet;
-            */
+            /* End of one section. */
         }
+ 
+        /* Sort the tokens. */
+        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
+
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {
@@ -236,4 +251,21 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
 
 EXIT:    
     return rc;        
+}
+
+
+int _CompTokenFreqDescOrder(const void *pSrc, const void *pTge) {
+    
+    if (pSrc == NULL) {
+        if (pTge == NULL)
+            return 0;
+        else
+            return 1;
+    } else {
+        if (pTge == NULL)
+            return -1;
+        else {
+            return -(((Token*)pSrc)->ulFrequency - ((Token*)pTge)->ulFrequency);
+        }
+    }
 }
