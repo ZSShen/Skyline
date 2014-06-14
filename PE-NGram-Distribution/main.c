@@ -46,6 +46,7 @@ int main(int argc, char **argv) {
     /* Deinitialize the NGram structure. */
 FREE_NG:
     NGram_deinit(pNGram);
+
     /* Deinitialize the RegionCollector structure. */
 FREE_RC:
     RegionCollector_deinit(pRegionCollector);

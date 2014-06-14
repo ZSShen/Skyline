@@ -64,10 +64,11 @@ void NGramDeinit(NGram *self) {
 
     if (self->arrToken != NULL) {
         /* Free the array of Token structures. */
-        for (i = 0 ; i < self->ulNumTokens ; i++) {
+        for (i = 0 ; i < _ulMaxValue ; i++) {
             pToken = self->arrToken[i];
-            if (pToken != NULL)
+            if (pToken != NULL) { 
                 Free(pToken);
+            }
         }
         Free(self->arrToken);
     }
@@ -94,7 +95,7 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
 
     if (cszMethod == NULL)
         _FuncTokenFreqDescOrder(self, pPEInfo, pRegionCollector);
-
+    
     return 0;
 }
 
@@ -105,7 +106,8 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
 
 int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int         rc, i, j, k;
-    uchar       ucIdxBitVF, ucIdxBitVT, ucIdxBitCur, ucBitVal, ucMask;
+    char        cIdxBitVF, cIdxBitVT, cIdxBitCur;
+    uchar       ucBitVal, ucMask;
     ushort      usNumRegions, usShiftPos, usIdxSection;
     ulong       ulSecRawSize, ulSecRawOffset, ulIdxBgn, ulIdxEnd, ulOstBgn, ulOstEnd, ulRegionSize;
     ulong       ulIdxByteRF, ulIdxByteVF, ulIdxByteVT, ulIdxByteCur, ulTokenVal;
@@ -151,38 +153,36 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 ulOstEnd = ulSecRawOffset + ulIdxEnd * ENTROPY_BLK_SIZE;
                 ulRegionSize = ulOstEnd - ulOstBgn;
 
-                printf("%lu %lu %lu\n", ulOstBgn, ulOstEnd, ulRegionSize);                
-
-
                 //----------------------------------------------------
-                // Main algorithm of the n-gram token collection.
+                // Main algorithm for the n-gram token collection.
                 //----------------------------------------------------
                 /* Preload a chunk of binary. */
                 Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
                 nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_MID;
+                memset(buf, 0, sizeof(uchar) * nExptRead);
                 nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
 
                 ulIdxByteRF = _ucDimension - 1;
                 ulIdxByteVF = ulIdxByteRF;
                 ulIdxByteVT = 0;
-                ucIdxBitVF = 0;
-                ucIdxBitVT = BIT_MOST_SIGNIFICANT;
+                cIdxBitVF = 0;
+                cIdxBitVT = BIT_MOST_SIGNIFICANT;
                 while (true) {
-                    ucIdxBitCur = ucIdxBitVT;
-                    ulIdxByteCur = ulIdxByteVT;
 
                     /* Generate token using the binary within the sliding window. */
+                    cIdxBitCur = cIdxBitVT;
+                    ulIdxByteCur = ulIdxByteVT;
                     ulTokenVal = 0;
                     for (k = 0 ; k < usShiftPos ; k++) {
                         ucMask = 1;
-                        ucMask <<= ucIdxBitCur;
+                        ucMask <<= cIdxBitCur;
                         ucBitVal = buf[ulIdxByteCur] & ucMask;
-                        ucBitVal >>= ucIdxBitCur;
+                        ucBitVal >>= cIdxBitCur;
                         ulTokenVal = (ulTokenVal << 1) + ucBitVal; 
                     
-                        ucIdxBitCur--;
-                        if (ucIdxBitCur < 0) {
-                            ucIdxBitCur = BIT_MOST_SIGNIFICANT;
+                        cIdxBitCur--;
+                        if (cIdxBitCur < 0) {
+                            cIdxBitCur = BIT_MOST_SIGNIFICANT;
                             ulIdxByteCur++;
                             if (ulIdxByteCur == BUF_SIZE_LARGE)
                                 ulIdxByteCur = 0;
@@ -190,16 +190,17 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                     }
 
                     if (self->arrToken[ulTokenVal] == NULL) {
+                        self->ulNumTokens++;
                         self->arrToken[ulTokenVal] = (Token*)Malloc(sizeof(Token));
                         self->arrToken[ulTokenVal]->ulValue = ulTokenVal;
-                        self->arrToken[ulTokenVal]->ulFrequency = 0;                    
+                        self->arrToken[ulTokenVal]->ulFrequency = 0;   
                     }
                     self->arrToken[ulTokenVal]->ulFrequency++;
-                    
+
                     /* Adjust the front-end location pointers. */
-                    ucIdxBitVF--;
-                    if(ucIdxBitVF < 0) {
-                        ucIdxBitVF = BIT_MOST_SIGNIFICANT;
+                    cIdxBitVF--;
+                    if(cIdxBitVF < 0) {
+                        cIdxBitVF = BIT_MOST_SIGNIFICANT;
                         
                         /* Check the condition to terminate the algorithm. */
                         ulIdxByteRF++;
@@ -213,14 +214,17 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                             /* Put a new chunk of data to the buffer with offset 
                                from 0 to (BUF_SIZE_LARGE - _ucDimension - 1). */
                             nExptRead = BUF_SIZE_LARGE - _ucDimension;
+                            if (nExptRead > (ulRegionSize - ulIdxByteRF))
+                                nExptRead = ulRegionSize - ulIdxByteRF;
+                            memset(buf, 0, sizeof(uchar) * nExptRead);
                             nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }        
                     }
                     
                     /* Adjust the tail-end location pointer. */
-                    ucIdxBitVT--;
-                    if(ucIdxBitVT < 0) {
-                        ucIdxBitVT = BIT_MOST_SIGNIFICANT;
+                    cIdxBitVT--;
+                    if(cIdxBitVT < 0) {
+                        cIdxBitVT = BIT_MOST_SIGNIFICANT;
                         
                         ulIdxByteVT++;
                         if(ulIdxByteVT == BUF_SIZE_LARGE) {
@@ -229,6 +233,9 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                             /* Put a new chunk of data to the buffer with offset
                                from (BUF_SIZE_LARGE - _ucDimension) to (BUF_SIZE_LARGE - 1). */
                             nExptRead = _ucDimension;
+                            if (nExptRead > (ulRegionSize - ulIdxByteRF))
+                                nExptRead = ulRegionSize - ulIdxByteRF;
+                            memset(buf, 0, sizeof(uchar) * nExptRead);
                             nRealRead = Fread(buf + BUF_SIZE_LARGE - _ucDimension, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }
                     }
@@ -239,8 +246,7 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
         }
  
         /* Sort the tokens. */
-        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
-
+        //qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {
