@@ -158,8 +158,8 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 //----------------------------------------------------
                 /* Preload a chunk of binary. */
                 Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
-                nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_MID;
-                memset(buf, 0, sizeof(uchar) * nExptRead);
+                nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_LARGE;
+                memset(buf, 0, sizeof(uchar) * BUF_SIZE_LARGE);
                 nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
 
                 ulIdxByteRF = _ucDimension - 1;
@@ -179,7 +179,7 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                         ucBitVal = buf[ulIdxByteCur] & ucMask;
                         ucBitVal >>= cIdxBitCur;
                         ulTokenVal = (ulTokenVal << 1) + ucBitVal; 
-                    
+
                         cIdxBitCur--;
                         if (cIdxBitCur < 0) {
                             cIdxBitCur = BIT_MOST_SIGNIFICANT;
@@ -210,13 +210,12 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                         ulIdxByteVF++;
                         if(ulIdxByteVF == BUF_SIZE_LARGE) {
                             ulIdxByteVF = 0;
-                            
+
                             /* Put a new chunk of data to the buffer with offset 
-                               from 0 to (BUF_SIZE_LARGE - _ucDimension - 1). */
+                               from 0 to (nExptRead - 1). */
                             nExptRead = BUF_SIZE_LARGE - _ucDimension;
                             if (nExptRead > (ulRegionSize - ulIdxByteRF))
                                 nExptRead = ulRegionSize - ulIdxByteRF;
-                            memset(buf, 0, sizeof(uchar) * nExptRead);
                             nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }        
                     }
@@ -231,11 +230,10 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                             ulIdxByteVT = 0;
                             
                             /* Put a new chunk of data to the buffer with offset
-                               from (BUF_SIZE_LARGE - _ucDimension) to (BUF_SIZE_LARGE - 1). */
+                               from (BUF_SIZE_LARGE - _ucDimension) to (BUF_SIZE_LARGE - 1 - _ucDimension + nExptRead). */
                             nExptRead = _ucDimension;
                             if (nExptRead > (ulRegionSize - ulIdxByteRF))
                                 nExptRead = ulRegionSize - ulIdxByteRF;
-                            memset(buf, 0, sizeof(uchar) * nExptRead);
                             nRealRead = Fread(buf + BUF_SIZE_LARGE - _ucDimension, sizeof(uchar), nExptRead, pPEInfo->fpSample);
                         }
                     }
