@@ -159,7 +159,6 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                 /* Preload a chunk of binary. */
                 Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
                 nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_LARGE;
-                memset(buf, 0, sizeof(uchar) * BUF_SIZE_LARGE);
                 nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
 
                 ulIdxByteRF = _ucDimension - 1;
@@ -190,10 +189,10 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
                     }
 
                     if (self->arrToken[ulTokenVal] == NULL) {
-                        self->ulNumTokens++;
                         self->arrToken[ulTokenVal] = (Token*)Malloc(sizeof(Token));
                         self->arrToken[ulTokenVal]->ulValue = ulTokenVal;
-                        self->arrToken[ulTokenVal]->ulFrequency = 0;   
+                        self->arrToken[ulTokenVal]->ulFrequency = 0;
+                        self->ulNumTokens++;
                     }
                     self->arrToken[ulTokenVal]->ulFrequency++;
 
@@ -244,7 +243,7 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
         }
  
         /* Sort the tokens. */
-        //qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
+        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {
@@ -258,8 +257,12 @@ EXIT:
 }
 
 
-int _CompTokenFreqDescOrder(const void *pSrc, const void *pTge) {
-    
+int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
+    Token *pSrc, *pTge;
+
+    pSrc = *(Token**)ppSrc;
+    pTge = *(Token**)ppTge;
+
     if (pSrc == NULL) {
         if (pTge == NULL)
             return 0;
@@ -269,7 +272,14 @@ int _CompTokenFreqDescOrder(const void *pSrc, const void *pTge) {
         if (pTge == NULL)
             return -1;
         else {
-            return -(((Token*)pSrc)->ulFrequency - ((Token*)pTge)->ulFrequency);
+            if (pSrc->ulFrequency == pTge->ulFrequency)
+                return 0;
+            else {
+                if (pSrc->ulFrequency < pTge->ulFrequency)
+                    return 1;
+                else
+                    return -1;
+            }
         }
     }
 }
