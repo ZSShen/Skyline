@@ -2,7 +2,7 @@
 #define _PE_INFO_H_
 
 #include "util.h"
-
+#include "except.h"
 
 /* Structure to store the PE header information. */
 typedef struct _PEHeader {

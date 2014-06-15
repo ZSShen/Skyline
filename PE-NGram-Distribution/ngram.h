@@ -48,11 +48,11 @@ typedef struct _NGram {
                             }
 
 
-/* Constructor for the NGram structure. */
+/* Constructor for NGram structure. */
 void NGramInit(NGram *self);
 
 
-/* Destructor for the NGram structure. */
+/* Destructor for NGram structure. */
 void NGramDeinit(NGram *self);
 
 

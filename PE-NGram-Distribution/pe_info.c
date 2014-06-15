@@ -1,6 +1,5 @@
-#include "util.h"
-#include "except.h"
 #include "pe_info.h"
+
 
 void PEInfoInit(PEInfo *self) {
     
