@@ -12,10 +12,18 @@ typedef struct _Token {
 } Token;
 
 
+/* Structure to store the single record of n-gram model. */
+typedef struct _Slice {
+    Token  *pDenominator, *pNumerator;
+    double dScore;
+} Slice;
+
+
 /* Structure to store all the information of n-gram model for the input sample. */
 typedef struct _NGram {
-    ulong   ulNumTokens;
+    ulong   ulNumTokens, ulNumSlices;
     Token   **arrToken;
+    Slice   **arrSlice;
 
     void (*setDimension)  (struct _NGram*, uchar ucDimension);
     int  (*generateModel) (struct _NGram*, const char*, PEInfo*, RegionCollector*);

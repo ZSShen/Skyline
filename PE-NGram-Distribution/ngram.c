@@ -60,7 +60,9 @@ void NGramInit(NGram *self) {
     _ucDimension = 0;
     _ulMaxValue = 0;
     self->ulNumTokens = 0;
+    self->ulNumSlices = 0;
     self->arrToken = NULL;
+    self->arrSlice = NULL;
 
     /* Assign the default member functions */
     self->setDimension = NGramSetDimension;
@@ -74,6 +76,7 @@ void NGramInit(NGram *self) {
 void NGramDeinit(NGram *self) {
     int     i;
     Token   *pToken;
+    Slice   *pSlice;
 
     if (self->arrToken != NULL) {
         /* Free the array of Token structures. */
@@ -84,6 +87,17 @@ void NGramDeinit(NGram *self) {
             }
         }
         Free(self->arrToken);
+    }
+
+    if (self->arrSlice != NULL) {
+        /* Free the array of Slice structures. */
+        for (i = 0 ; i < self->ulNumSlices ; i++) {
+            pSlice = self->arrSlice[i];
+            if (pSlice != NULL) {
+                Free(pSlice);
+            }
+        }
+        Free(self->arrSlice);
     }
 
     return;
@@ -156,10 +170,6 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
 
     rc = 0;
     try {
-        //----------------------------------------------------
-        // First part: Collect and sort the n-gram tokens.
-        //----------------------------------------------------
-
         usNumRegions = pRegionCollector->usNumRegions;
         if (usNumRegions == 0)
             goto EXIT;
@@ -167,7 +177,7 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
         if (_ucDimension == 0)
             goto EXIT;
 
-        self->arrToken = (Token**)Malloc(sizeof(Token*) * _ulMaxValue);
+        self->arrToken = (Token**)Calloc(_ulMaxValue, sizeof(Token*));
         for (i = 0 ; i < _ulMaxValue ; i++)
             self->arrToken[i] = NULL;
 
@@ -297,7 +307,9 @@ EXIT:
  * with descending order.
  */
 int _FuncTokenFreqDescOrder(NGram *self) {
-    int rc;
+    int     rc, i, j;
+    double  dScore;
+    Token   *pToken, *pDenominator, *pNumerator;
 
     rc = 0;
     try {
@@ -305,7 +317,39 @@ int _FuncTokenFreqDescOrder(NGram *self) {
         qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
 
         /* Adjust the size of arrToken to eliminate NULL elements. */
-        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens); 
+        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens);
+
+        /* Ignore the dummy tokens: (ff)+ and (00)+. */
+        self->ulNumSlices = self->ulNumTokens - 2;
+        self->arrSlice = (Slice**)Calloc(self->ulNumSlices, sizeof(Slice*));
+        for (i = 0 ; i < self->ulNumSlices ; i++)
+            self->arrSlice[i] = NULL; 
+    
+        /* Choose the most frequently appearing token as the denominator. */
+        for (i = 0 ; i < self->ulNumTokens ; i++) {
+            pToken = self->arrToken[i];
+            if ((pToken->ulValue != 0) && (pToken->ulValue != (_ulMaxValue - 1))) {
+                pDenominator  = pToken;
+                break;
+            }
+        }
+
+        /* Collect the slices. */
+        for (i = 0, j = 0; i < self->ulNumTokens ; i++) {
+            pToken = self->arrToken[i];
+            if ((pToken->ulValue != 0) && (pToken->ulValue != (_ulMaxValue - 1))) {
+                pNumerator = pToken;
+                
+                self->arrSlice[j] = (Slice*)Malloc(sizeof(Slice));
+                self->arrSlice[j]->pDenominator = pDenominator;
+                self->arrSlice[j]->pNumerator = pNumerator;
+
+                dScore = (double)pNumerator->ulFrequency / (double)pDenominator->ulFrequency;
+                self->arrSlice[j]->dScore = dScore;                
+
+                j++;
+            }
+        }
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;
     } end_try;
