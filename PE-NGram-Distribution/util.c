@@ -67,6 +67,21 @@ void* MemCalloc(size_t nLength, size_t nSize, const char *cszPathFile, const int
 
 
 /**
+ * MemRealloc(): Wrapper function for realloc().
+ */
+void* MemRealloc(void *pOld, size_t nLength, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+    void *pNew;
+
+    assert(nLength > 0);
+    pNew = realloc(pOld, nLength);
+    if (pNew == NULL)
+        throw(EXCEPT_MEM_ALLOC);
+
+    return pNew;
+}
+
+
+/**
  * MemFree(): Wrapper function for free().
  */
 void MemFree(void *ptr) {

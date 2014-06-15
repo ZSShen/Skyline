@@ -33,8 +33,9 @@ typedef unsigned long   ulong;
 #define Log2(p0, p1, p2)            Log p0, p1, p2)
 #define Log3(p0, p1, p2, p3)        Log p0, p1, p2, p3)
 
-#define Malloc(p0)                  MemAlloc (p0,     __FILE__, __LINE__, __FUNCTION__)
-#define Calloc(p0, p1)              MemCalloc(p0, p1, __FILE__, __LINE__, __FUNCTION__)
+#define Malloc(p0)                  MemAlloc  (p0,     __FILE__, __LINE__, __FUNCTION__)
+#define Calloc(p0, p1)              MemCalloc (p0, p1, __FILE__, __LINE__, __FUNCTION__)
+#define Realloc(p0, p1)             MemRealloc(p0, p1, __FILE__, __LINE__, __FUNCTION__)
 #define Free(p0)                    MemFree(p0)
 
 #define Fopen(p0, p1)               FileOpen (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
@@ -122,6 +123,7 @@ void WriteLog(const char *cszPathCode, int iLineNo, const char *cszFunc, const c
 /* Wrapper for memory manipulation utilities. */
 void* MemAlloc(size_t, const char*, const int, const char*);
 void* MemCalloc(size_t, size_t, const char*, const int, const char*);
+void* MemRealloc(void*, size_t, const char*, const int, const char*);
 void MemFree(void*);
 void MemCopy(void*, const void*, size_t, size_t);
 
