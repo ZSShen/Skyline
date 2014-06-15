@@ -53,6 +53,7 @@ void NGramInit(NGram *self) {
     /* Assign the default member functions */
     self->setDimension = NGramSetDimension;
     self->generateModel = NGramGenerateModel;    
+    self->dump = NGramDump;
 
     return;
 }
@@ -64,7 +65,7 @@ void NGramDeinit(NGram *self) {
 
     if (self->arrToken != NULL) {
         /* Free the array of Token structures. */
-        for (i = 0 ; i < _ulMaxValue ; i++) {
+        for (i = 0 ; i < self->ulNumTokens ; i++) {
             pToken = self->arrToken[i];
             if (pToken != NULL) { 
                 Free(pToken);
@@ -100,6 +101,22 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
 }
 
 
+/**
+ * NGramDump(): Dump the information recorded from the generated n-gram tokens.
+ */
+void NGramDump(NGram *self) {
+    int     i;    
+    Token   *pToken;
+
+    /* Dump the n-gram tokens. */
+    for (i = 0 ; i < self->ulNumTokens ; i++) {
+        pToken = self->arrToken[i];
+        if (pToken != NULL)
+            printf("%d\t%04x\t%lu\n", i, pToken->ulValue, pToken->ulFrequency);
+    }
+
+    return;
+}
 /*===========================================================================*
  *                Implementation for internal functions                      *
  *===========================================================================*/
@@ -244,6 +261,10 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
  
         /* Sort the tokens. */
         qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
+
+        /* Adjust the size of arrToken to eliminate NULL elements. */
+        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens);
+
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {

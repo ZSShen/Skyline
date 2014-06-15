@@ -19,6 +19,7 @@ typedef struct _NGram {
 
     void (*setDimension)  (struct _NGram*, uchar ucDimension);
     int  (*generateModel) (struct _NGram*, const char*, PEInfo*, RegionCollector*);
+    void (*dump)          (struct _NGram*);
 } NGram;
 
 
@@ -69,6 +70,13 @@ void NGramSetDimension(NGram *self, uchar ucDimension);
  */
 int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
+
+/**
+ * This function dumps the information recorded from the generated n-gram tokens.
+ *
+ * @param   self            The pointer to the NGram structure.
+ */
+void NGramDump(NGram *self);
 
 /*===========================================================================*
  *                 Supported Model Generation Methods                        *
