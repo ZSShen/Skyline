@@ -12,30 +12,42 @@ ulong _ulMaxValue;
  *===========================================================================*/
 
 /**
+ * This function collects the n-gram tokens from the specified binary regions.
+ *
+ * @param   self                The pointer to the NGram structure.
+ * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure.
+ * @param   pRegionCollector    The pointer to the RegionCollector structure which stores all the selected features.
+ *
+ * @return                      0: The tokens are collected successfully.
+ *                            < 0: Exception occurs while memory allocation.
+ */
+int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
+
+
+/**
  * This function generates the model by sorting the appearance frequencies of n-gram tokens
  * with descending order.
  *
  * @param   self                The pointer to the NGram structure.
- * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure. 
- * @param   pRegionCollector    The pointer to the RegionCollector structure which stores all the selected features.
  *
  * @return                      0: The model is generated successfully.
  *                            < 0: Exception occurs while memory allocation.
  */
-int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
+int _FuncTokenFreqDescOrder(NGram *self);
 
 
 /**
- * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency.
+ * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency
+ * in descending order.
  *
- * @param   pSrc        The pointer to the source token.
- * @param   pDst        The pointer to the target token.
+ * @param   ppSrc        The pointer to the pointer indexing to the source token.
+ * @param   ppDst        The pointer to the pointer indexing to the target token.
  *
  * @return             < 0: The source token must go before the target one.
  *                       0: The source and target tokens do not need to change their order.
  *                     > 0: The source token must go after the target one. 
  */
-int _CompTokenFreqDescOrder(const void *pSrc, const void *pTge);
+int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge);
 
 
 /*===========================================================================*
@@ -94,8 +106,12 @@ void NGramSetDimension(NGram *self, uchar ucDimension) {
  */
 int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
 
+    /* First, collect tokens from the specified binary regions. */
+    _NGramCollectTokens(self, pPEInfo, pRegionCollector);
+
+    /* Second, generate model by different methods. */
     if (cszMethod == NULL)
-        _FuncTokenFreqDescOrder(self, pPEInfo, pRegionCollector);
+        _FuncTokenFreqDescOrder(self);
     
     return 0;
 }
@@ -117,11 +133,16 @@ void NGramDump(NGram *self) {
 
     return;
 }
+
+
 /*===========================================================================*
  *                Implementation for internal functions                      *
  *===========================================================================*/
 
-int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+/**
+ * _NGramCollectTokens(): Collect the n-gram tokens from the specified binary regions.
+ */
+int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int         rc, i, j, k;
     char        cIdxBitVF, cIdxBitVT, cIdxBitCur;
     uchar       ucBitVal, ucMask;
@@ -258,13 +279,6 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
             }
             /* End of one section. */
         }
- 
-        /* Sort the tokens. */
-        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
-
-        /* Adjust the size of arrToken to eliminate NULL elements. */
-        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens);
-
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;        
     } catch(EXCEPT_IO_FILE_READ) {
@@ -274,10 +288,36 @@ int _FuncTokenFreqDescOrder(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegi
     } end_try;
 
 EXIT:    
-    return rc;        
+    return rc;       
 }
 
 
+/**
+ * _FuncTokenFreqDescOrder(): Generate the model by sorting the appearance frequencies of n-gram tokens
+ * with descending order.
+ */
+int _FuncTokenFreqDescOrder(NGram *self) {
+    int rc;
+
+    rc = 0;
+    try {
+        /* Sort the tokens. */
+        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
+
+        /* Adjust the size of arrToken to eliminate NULL elements. */
+        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens); 
+    } catch(EXCEPT_MEM_ALLOC) {
+        rc = -1;
+    } end_try;
+    
+    return rc;
+}
+
+
+/**
+ * _CompTokenFreqDescOrder(): Hint the qsort() library to sort the n-gram tokens by their appearance frequency
+ * in descending order.
+ */
 int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
     Token *pSrc, *pTge;
 
