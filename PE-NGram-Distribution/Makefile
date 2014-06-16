@@ -27,8 +27,9 @@ clean:
 	rm *.o ngram_distribution
 
 run:
-	./ngram_distribution $(SAMPLE)
+	./ngram_distribution -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION)
 
 run_debug:
-	valgrind --leak-check=yes --track-origins=yes ./ngram_distribution $(SAMPLE)
+	valgrind --leak-check=yes --track-origins=yes \
+    ./ngram_distribution -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION)
 
