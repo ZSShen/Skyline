@@ -4,6 +4,9 @@
 #include "region.h"
 #include "ngram.h"
 
+/* Print the program usage message. */
+void print_usage();
+
 
 /* Bundle operations to manipulate PEInfo structure and parse input sample. */
 int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput);
@@ -19,14 +22,67 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
 
 int main(int argc, char **argv) {
-    int             rc;    
-    const char      *cszInput;
+    int             opt, rc, idxOpt;
+    uchar           ucDimension;
+    const char      *cszInput, *cszOutput;
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
     NGram           *pNGram;
+    
+    /* Craft the structure to store command line options. */    
+    static struct option Options[] = {
+        {"input"    , required_argument, 0, 'i'},
+        {"output"   , required_argument, 0, 'o'},
+        {"dimension", required_argument, 0, 'd'}
+    };
+    const char *cszOrder = "i:o:d:";
 
+    cszInput = cszOutput = NULL;
     rc = 0;
-    cszInput = argv[1];    
+
+    /* Get the command line options. */
+    idxOpt = 0;
+    while ((opt = getopt_long(argc, argv, cszOrder, Options, &idxOpt)) != -1) {
+        switch (opt) {
+            case 'i': {
+                cszInput = optarg;
+                break;
+            }
+            case 'o': {
+                cszOutput = optarg;
+                break;
+            }
+            case 'd': {
+                ucDimension = atoi(optarg);
+                break;
+            }
+            default: {
+                print_usage();
+                rc = -1;
+                goto EXIT;            
+            }
+        }
+    }
+
+    /* Check the length of path string. */
+    if ((cszInput == NULL) || (strlen(cszInput) == 0)) {
+        print_usage();
+        rc = -1;
+        goto EXIT;
+    }
+
+    if ((cszOutput == NULL) || (strlen(cszOutput) == 0)) {
+        print_usage();
+        rc = -1;
+        goto EXIT;
+    }
+
+    /* Check the dimension. */
+    if ((ucDimension == 0) || (ucDimension > 4)) {
+        print_usage();        
+        rc = -1;
+        goto EXIT;
+    }    
 
     /* Prepare the basic PE features. */
     rc = parse_pe_info(&pPEInfo, cszInput);
@@ -55,6 +111,7 @@ FREE_RC:
 FREE_PE:
     PEInfo_deinit(pPEInfo);
 
+EXIT:
     return rc;
 }
 
@@ -86,6 +143,18 @@ int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
 
 EXIT:
     return rc;
+}
+
+
+void print_usage() {
+
+    const char *cszMsg = "Usage: ngram_distribution -input path_input -output path_output -dimension num.\n"
+                         "       path_input : The path to the input sample.\n"
+                         "       path_output: The path to the output report folder.\n"
+                         "       dimension  : The dimension of n-gram model.\n"
+                         "                    (Must be larger than 0 and be less than 5.)\n";   
+    printf("%s", cszMsg);
+    return;
 }
 
 
