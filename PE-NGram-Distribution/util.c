@@ -183,6 +183,10 @@ int FileClose(FILE *fptr) {
 /**
  * DirMake(): Wrapper function for mkdir().
  */
+
+#if defined(_WIN32)
+
+#elif defined(__linux__)
 int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
     int rc;
 
@@ -194,4 +198,4 @@ int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const 
 
     return rc;
 }
-
+#endif

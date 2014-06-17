@@ -4,7 +4,6 @@
 /* Constructor for Report structure. */
 void ReportInit(Report *self) {
 
-    self->createFolder = ReportCreateFolder;
     self->logEntropyDistribution = ReportLogEntropyDistribution;
     self->logNGramModel = ReportLogNGramModel;
     self->plotNGramModel = ReportPlotNGramModel;
@@ -21,24 +20,23 @@ void ReportDeinit(Report *self) {
 
 
 /**
- * ReportCreateFolder(): Create the folder to store all the related reports.
- */
-int ReportCreateFolder(Report *self, const char *cszPath) {
-    int rc;
-
-    rc = 0;
-
-    return rc;
-}
-
-
-/**
  * ReportLogEntropyDistribution(): Log the entropy distribution of all the sections.
  */
-int ReportLogEntropyDistribution(Report *self, const char *cszName) {
+int ReportLogEntropyDistribution(Report *self, const char *cszPath, const char *cszName) {
     int rc;
 
     rc = 0;
+
+    try {
+        #if defined(_WIN32)
+
+        #elif defined(__linux__)
+            Mkdir(cszPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        #endif
+    
+    } catch(EXCEPT_IO_DIR_MAKE) {
+        rc = -1;
+    } end_try;
 
     return rc;
 }
