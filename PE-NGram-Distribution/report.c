@@ -22,7 +22,7 @@ void ReportDeinit(Report *self) {
 /**
  * ReportLogEntropyDistribution(): Log the entropy distribution of all the sections.
  */
-int ReportLogEntropyDistribution(Report *self, const char *cszPath, const char *cszName) {
+int ReportLogEntropyDistribution(Report *self, const char *cszDirPath, const char *cszSampleName) {
     int rc;
 
     rc = 0;
@@ -31,7 +31,7 @@ int ReportLogEntropyDistribution(Report *self, const char *cszPath, const char *
         #if defined(_WIN32)
 
         #elif defined(__linux__)
-            Mkdir(cszPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         #endif
     
     } catch(EXCEPT_IO_DIR_MAKE) {
@@ -45,7 +45,7 @@ int ReportLogEntropyDistribution(Report *self, const char *cszPath, const char *
 /**
  * ReportLogNGramModel(): Log the full n-gram model.
  */
-int ReportLogNGramModel(Report *self, const char *cszName) {
+int ReportLogNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName) {
     int rc;
 
     rc = 0;
@@ -57,7 +57,7 @@ int ReportLogNGramModel(Report *self, const char *cszName) {
 /**
  * ReportPlotNGramModel(): Plot the visualized trend line of n-gram model with gnuplot utility.
  */
-int ReportPlotNGramModel(Report *self, const char *cszName) {
+int ReportPlotNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName) {
     int rc;
 
     rc = 0;

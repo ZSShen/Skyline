@@ -3,6 +3,7 @@
 #include "pe_info.h"
 #include "region.h"
 #include "ngram.h"
+#include "report.h"
 
 /* Print the program usage message. */
 void print_usage();
@@ -21,6 +22,10 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
                     PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
+/* Bundle operations to manipulate Report structure and generate the relevant reports. */
+int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir);
+
+
 int main(int argc, char **argv) {
     int             opt, rc, idxOpt;
     uchar           ucDimension;
@@ -28,6 +33,7 @@ int main(int argc, char **argv) {
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
     NGram           *pNGram;
+    Report          *pReport;
     
     /* Craft the structure to store command line options. */    
     static struct option Options[] = {
@@ -98,6 +104,13 @@ int main(int argc, char **argv) {
     rc = generate_model(&pNGram, NULL, 2, pPEInfo, pRegionCollector);
     if (rc != 0)
         goto FREE_NG;
+
+    /* Generate the relevant reports for the model. */
+    rc = generate_report(&pReport, pPEInfo, cszOutput);
+
+
+    /* Deinitialize the Report structure*/
+    Report_deinit(pReport);
 
     /* Deinitialize the NGram structure. */
 FREE_NG:
@@ -194,3 +207,29 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
     return rc;
 }
+
+
+int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir) {
+    int        rc;
+    const char *cszSampleName;
+    Report     *pReport;
+
+    rc = 0;
+    
+    /* Initialize the Report structure. */
+    Report_init(*ppReport);
+    if (*ppReport != NULL) {
+        pReport = *ppReport;
+
+        /* Retrieve the sample name. */
+        cszSampleName = pPEInfo->szSampleName;
+
+        /* Generate the entropy distribution report. */
+        rc = pReport->logEntropyDistribution(pReport, cszOutDir, cszSampleName);
+
+    } else 
+        rc = -1;
+
+    return rc;
+}
+

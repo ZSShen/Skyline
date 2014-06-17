@@ -1,8 +1,8 @@
-main: util.o except.o pe_info.o region.o ngram.o main.o 
+main: util.o except.o pe_info.o region.o ngram.o report.o main.o 
 	gcc -o ngram_distribution *.o -lm
 
 debug: FLAG = -g
-debug: util.o except.o pe_info.o region.o ngram.o main.o
+debug: util.o except.o pe_info.o region.o ngram.o report.o main.o
 	gcc $(FLAG) -o ngram_distribution *.o -lm
 
 main.o: util.h
@@ -22,6 +22,9 @@ region.o: util.h except.h pe_info.h
 
 ngram.o: util.h except.h pe_info.h region.h
 	gcc $(FLAG) -c ngram.c
+
+report.o: util.h except.h pe_info.h region.h ngram.h
+	gcc $(FLAG) -c report.c
 
 clean:
 	rm *.o ngram_distribution

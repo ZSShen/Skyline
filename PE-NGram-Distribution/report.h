@@ -41,39 +41,39 @@ void ReportDeinit(Report *self);
 /**
  * This function logs the entropy distribution of all the sections.
  *
- * @param   self        The pointer to the Report structure.
- * @param   cszPath     The path to the output folder.
- * @param   cszName     The name of the input sample.
+ * @param   self            The pointer to the Report structure.
+ * @param   cszDirPath      The path to the output folder.
+ * @param   cszSampleName   The name of the input sample.
  *
  * @return              0: The report is generated successfully.
  *                    < 0: Exception occurs while file creation or file writing.
  */
-int ReportLogEntropyDistribution(Report *self, const char *cszPath, const char *cszName);
+int ReportLogEntropyDistribution(Report *self, const char *cszDirPath, const char *cszSampleName);
 
 
 /**
  * This function logs the full n-gram model.
  * 
- * @param   self        The pointer to the Report structure.
- * @param   cszPath     The path to the output folder.
- * @param   cszName     The name of the input sample.
+ * @param   self            The pointer to the Report structure.
+ * @param   cszDirPath      The path to the output folder.
+ * @param   cszSampleName   The name of the input sample.
  *
  * @return              0: The report is generated successfully.
  *                    < 0: Exception occurs while file creation or file writing.
  */
-int ReportLogNGramModel(Report *self, const char *cszPath, const char *cszName);
+int ReportLogNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName);
 
 
 /**
  * This function plots the visualized trend line of n-gram model with gnuplot utility.
  *
- * @param   self        The pointer to the Report structure.
- * @param   cszPath     The path to the output folder.
- * @param   cszName     The name of the input sample.
+ * @param   self            The pointer to the Report structure.
+ * @param   cszDirPath      The path to the output folder.
+ * @param   cszSampleName   The name of the input sample.
  *
  * @return              0: The port is generated successfully.
  *                    < 0: Exception occurs while shell command execution.
  */
-int ReportPlotNGramModel(Report *self, const char *cszPath, const char *cszName);
+int ReportPlotNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName);
 
 #endif
