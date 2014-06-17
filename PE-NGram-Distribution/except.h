@@ -15,6 +15,7 @@
 #define EXCEPT_IO_FILE_READ     (EXCEPT_IO - 2)
 #define EXCEPT_IO_FILE_WRITE    (EXCEPT_IO - 3)
 #define EXCEPT_IO_FILE_SEEK     (EXCEPT_IO - 4)
+#define EXCEPT_IO_DIR_MAKE      (EXCEPT_IO - 5)
 
 /* Memory related errors. */
 #define EXCEPT_MEM              (EXCEPT_NO - 20)

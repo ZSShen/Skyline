@@ -110,9 +110,8 @@ FILE* FileOpen(const char *cszPath, const char *cszMode, const char *cszPathFile
     FILE *fptr;
     
     fptr = fopen(cszPath, cszMode);
-    if (fptr == NULL) {
+    if (fptr == NULL)
         throw(EXCEPT_IO_FILE_OPEN);
-    }
 
     return fptr;
 }
@@ -128,9 +127,8 @@ size_t FileRead(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char 
     nRead = fread(ptr, nSize, nLength, fptr);
     if (nRead != (nSize * nLength)) {
         rc = ferror(fptr);
-        if (rc != 0) {
+        if (rc != 0)
             throw(EXCEPT_IO_FILE_READ);
-        }
     }
     
     return nRead;
@@ -147,9 +145,8 @@ size_t FileWrite(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char
     nWrite = fwrite(ptr, nSize, nLength, fptr);
     if (nWrite != (nSize * nLength)) {
         rc = ferror(fptr);
-        if (rc != 0) {
+        if (rc != 0)
             throw(EXCEPT_IO_FILE_WRITE);
-        }
     }
 
     return nWrite;
@@ -159,7 +156,7 @@ size_t FileWrite(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char
 /**
  * FileSeek(): Wrapper function for fseek().
  */
-int FileSeek(FILE *fptr, long iOffset, int iOrigin, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+int FileSeek(FILE *fptr, long iOffset, int iOrigin, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
     int rc;
     
     rc = fseek(fptr, iOffset, iOrigin);
@@ -181,3 +178,20 @@ int FileClose(FILE *fptr) {
     
     return rc;
 }
+
+
+/**
+ * DirMake(): Wrapper function for mkdir().
+ */
+int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+    int rc;
+
+    rc = mkdir(cszPathDir, mode);
+    if (rc != 0) {
+        if (errno != EEXIST)
+            throw(EXCEPT_IO_DIR_MAKE);
+    }
+
+    return rc;
+}
+
