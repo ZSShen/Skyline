@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
         goto FREE_RC;
 
     /* Generate the model with the selected features. */
-    rc = generate_model(&pNGram, NULL, 2, pPEInfo, pRegionCollector);
+    rc = generate_model(&pNGram, NULL, ucDimension, pPEInfo, pRegionCollector);
     if (rc != 0)
         goto FREE_NG;
 
@@ -129,6 +129,18 @@ EXIT:
 }
 
 
+void print_usage() {
+
+    const char *cszMsg = "Usage: ngram_distribution -input path_input -output path_output -dimension num.\n"
+                         "       path_input : The path to the input sample.\n"
+                         "       path_output: The path to the output report folder.\n"
+                         "       dimension  : The dimension of n-gram model.\n"
+                         "                    (Must be larger than 0 and be less than 5.)\n";   
+    printf("%s", cszMsg);
+    return;
+}
+
+
 int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
     int     rc;
     PEInfo  *pPEInfo;    
@@ -137,6 +149,11 @@ int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
 
     /* Initialize the PEInfo structure. */
     PEInfo_init(*ppPEInfo);
+    if (*ppPEInfo == NULL) {
+        rc = -1;
+        goto EXIT;
+    }
+
     pPEInfo = *ppPEInfo;        
 
     /* Open the input sample for analysis. */
@@ -159,18 +176,6 @@ EXIT:
 }
 
 
-void print_usage() {
-
-    const char *cszMsg = "Usage: ngram_distribution -input path_input -output path_output -dimension num.\n"
-                         "       path_input : The path to the input sample.\n"
-                         "       path_output: The path to the output report folder.\n"
-                         "       dimension  : The dimension of n-gram model.\n"
-                         "                    (Must be larger than 0 and be less than 5.)\n";   
-    printf("%s", cszMsg);
-    return;
-}
-
-
 int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo) {
     int     rc;
     RegionCollector *pRegionCollector;
@@ -179,10 +184,13 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
 
     /* Initialize the RegionCollector structure. */
     RegionCollector_init(*ppRegionCollector);
-    pRegionCollector = *ppRegionCollector;
+    if (*ppRegionCollector != NULL) {
+        pRegionCollector = *ppRegionCollector;
 
-    /* Select the features. */
-    rc = pRegionCollector->selectFeatures(pRegionCollector, cszMethod, pPEInfo);
+        /* Select the features. */
+        rc = pRegionCollector->selectFeatures(pRegionCollector, cszMethod, pPEInfo);
+    } else
+        rc = -1;
 
     return rc;
 }
@@ -197,13 +205,16 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
     /* Initialize the NGram structure. */
     NGram_init(*ppNGram);
-    pNGram = *ppNGram;
+    if (*ppNGram != NULL) {
+        pNGram = *ppNGram;
 
-    /* Set the maximum value of a n-gram token. */
-    pNGram->setDimension(pNGram, ucDimension);
+        /* Set the maximum value of a n-gram token. */
+        pNGram->setDimension(pNGram, ucDimension);
 
-    /* Generate the model. */
-    rc = pNGram->generateModel(pNGram, cszMethod, pPEInfo, pRegionCollector);
+        /* Generate the model. */
+        rc = pNGram->generateModel(pNGram, cszMethod, pPEInfo, pRegionCollector);
+    } else
+        rc = -1;
 
     return rc;
 }
@@ -226,7 +237,6 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir) {
 
         /* Generate the entropy distribution report. */
         rc = pReport->logEntropyDistribution(pReport, cszOutDir, cszSampleName);
-
     } else 
         rc = -1;
 
