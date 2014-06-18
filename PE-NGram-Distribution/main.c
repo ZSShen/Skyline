@@ -236,7 +236,7 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir) {
         cszSampleName = pPEInfo->szSampleName;
 
         /* Generate the entropy distribution report. */
-        rc = pReport->logEntropyDistribution(pReport, cszOutDir, cszSampleName);
+        rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
     } else 
         rc = -1;
 

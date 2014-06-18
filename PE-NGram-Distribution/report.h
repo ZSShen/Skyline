@@ -7,7 +7,7 @@
 #include "ngram.h"
 
 typedef struct _Report {
-    int (*logEntropyDistribution) (struct _Report*, const char*, const char*);
+    int (*logEntropyDistribution) (struct _Report*, PEInfo*, const char*, const char*);
     int (*logNGramModel)          (struct _Report*, const char*, const char*);
     int (*plotNGramModel)         (struct _Report*, const char*, const char*);
 } Report;
@@ -42,13 +42,14 @@ void ReportDeinit(Report *self);
  * This function logs the entropy distribution of all the sections.
  *
  * @param   self            The pointer to the Report structure.
+ * @param   pPEInfo         The pointer to the PEInfo structure.
  * @param   cszDirPath      The path to the output folder.
  * @param   cszSampleName   The name of the input sample.
  *
  * @return              0: The report is generated successfully.
  *                    < 0: Exception occurs while file creation or file writing.
  */
-int ReportLogEntropyDistribution(Report *self, const char *cszDirPath, const char *cszSampleName);
+int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszDirPath, const char *cszSampleName);
 
 
 /**

@@ -62,7 +62,7 @@ typedef unsigned long   ulong;
 #define BUF_SIZE_SMALL              (128)
 #define BUF_SIZE_TINY               (8)
 
-/* Maximum number of lines in a single write request. */
+/* Maximum number of lines in a single file writing operation. */
 #define BATCH_WRITE_LINE_COUNT      (80)
 
 /* Number of bytes for each data unit. */
@@ -97,10 +97,10 @@ typedef unsigned long   ulong;
 #define UNI_GRAM_MAX_VALUE                  (256)   /* The maximum value of n-gram with dimension one. */
 
 /* The names of each kinds of reports. */
-#define REPORT_NAME_TXT_SECTION_ENTROPY     "entropy.txt"
-#define REPORT_NAME_TXT_NGRAM_MODEL         "ngram_model.txt"
-#define REPORT_NAME_PNG_NGRAM_MODEL         "ngram_model.png"
-#define REPORT_NAME_GNU_PLOT_SCRIPT         "plot_script"
+#define REPORT_PREFIX_TXT_SECTION_ENTROPY   "_entropy.txt"
+#define REPORT_PREFIX_TXT_NGRAM_MODEL       "_ngram_model.txt"
+#define REPORT_PREFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
+#define REPORT_PREFIX_GNU_PLOT_SCRIPT       "_plot_script"
 
 /* Criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (1920)
