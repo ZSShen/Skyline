@@ -23,7 +23,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
 
 /* Bundle operations to manipulate Report structure and generate the relevant reports. */
-int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir);
+int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir);
 
 
 int main(int argc, char **argv) {
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
         goto FREE_NG;
 
     /* Generate the relevant reports for the model. */
-    rc = generate_report(&pReport, pPEInfo, cszOutput);
+    rc = generate_report(&pReport, pPEInfo, pNGram, cszOutput);
 
 
     /* Deinitialize the Report structure*/
@@ -220,7 +220,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 }
 
 
-int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir) {
+int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir) {
     int        rc;
     const char *cszSampleName;
     Report     *pReport;
@@ -237,9 +237,20 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, const char *cszOutDir) {
 
         /* Generate the entropy distribution report. */
         rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
+        if (rc != 0)
+            goto EXIT;
+
+        /* Generate the full n-gram model report. */
+        rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+        if (rc != 0)
+            goto EXIT;
+
+        /* Generate the visualized n-gram model. */
+
     } else 
         rc = -1;
 
+EXIT:
     return rc;
 }
 

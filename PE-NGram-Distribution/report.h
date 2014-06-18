@@ -8,7 +8,7 @@
 
 typedef struct _Report {
     int (*logEntropyDistribution) (struct _Report*, PEInfo*, const char*, const char*);
-    int (*logNGramModel)          (struct _Report*, const char*, const char*);
+    int (*logNGramModel)          (struct _Report*, NGram*,  const char*, const char*);
     int (*plotNGramModel)         (struct _Report*, const char*, const char*);
 } Report;
 
@@ -56,13 +56,14 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
  * This function logs the full n-gram model.
  * 
  * @param   self            The pointer to the Report structure.
+ * @param   pNGram          The pointer to the NGram structure.
  * @param   cszDirPath      The path to the output folder.
  * @param   cszSampleName   The name of the input sample.
  *
  * @return              0: The report is generated successfully.
  *                    < 0: Exception occurs while file creation or file writing.
  */
-int ReportLogNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName);
+int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName);
 
 
 /**

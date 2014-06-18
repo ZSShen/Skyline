@@ -131,6 +131,8 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
 
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
+    } catch(EXCEPT_IO_FILE_WRITE) {
+        rc = -1;
     } end_try;
 
 EXIT:
@@ -141,11 +143,58 @@ EXIT:
 /**
  * ReportLogNGramModel(): Log the full n-gram model.
  */
-int ReportLogNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName) {
-    int rc;
+int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
+    bool    bHasSep;
+    int     rc, iLenPath;
+    FILE    *fpReport;
+    char    buf[BUF_SIZE_LARGE + 1];
 
     rc = 0;
 
+    try {
+        #if defined(_WIN32)
+
+        #elif defined(__linux__)
+            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        #endif
+    
+        /* Generate the report path string. */
+        memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
+    
+        bHasSep = false;
+        iLenPath = strlen(cszDirPath);
+        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+            iLenPath++;
+            bHasSep = true;        
+        }
+        iLenPath += strlen(cszSampleName);
+        iLenPath += strlen(REPORT_PREFIX_TXT_SECTION_ENTROPY);
+
+        if (iLenPath > BUF_SIZE_LARGE) {
+            Log1("The output folder path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+            rc = -1;
+            goto EXIT;
+        }
+        
+        if (bHasSep == false)
+            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_SECTION_ENTROPY);
+        else
+            sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_PREFIX_TXT_NGRAM_MODEL);
+
+        /* Prepare the file pointer for the report. */
+        fpReport = Fopen(buf, "w");
+
+        /* Release the file pointer. */
+        Fclose(fpReport);
+        
+    } catch(EXCEPT_IO_DIR_MAKE) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_WRITE) {
+        rc = -1;
+    } end_try;
+
+EXIT:
     return rc;
 }
 
