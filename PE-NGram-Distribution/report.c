@@ -145,8 +145,9 @@ EXIT:
  */
 int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
     bool    bHasSep;
-    int     rc, iLenPath;
+    int     rc, i, iLenPath, iLenBuf, iCountBatch;
     FILE    *fpReport;
+    Slice   **arrSlice;
     char    buf[BUF_SIZE_LARGE + 1];
 
     rc = 0;
@@ -184,6 +185,27 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
 
         /* Prepare the file pointer for the report. */
         fpReport = Fopen(buf, "w");
+
+        /* Log each piece of n-gram model slice. */
+        arrSlice = pNGram->arrSlice;
+        
+        iLenBuf = iCountBatch = 0;
+        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);    
+        for (i = 0 ; i < pNGram->ulNumSlices ; i++) {
+            sprintf(buf + iLenBuf, "%d\t%.3lf\t#(0x%08lx:%lu)\t(0x%08lx:%lu)\n", i, arrSlice[i]->dScore,
+                    arrSlice[i]->pNumerator->ulValue,
+                    arrSlice[i]->pNumerator->ulFrequency,
+                    arrSlice[i]->pDenominator->ulValue,
+                    arrSlice[i]->pDenominator->ulFrequency);            
+            iLenBuf = strlen(buf);
+            iCountBatch++;
+            if (iCountBatch == BATCH_WRITE_LINE_COUNT) {
+                Fwrite(buf, sizeof(char), iLenBuf, fpReport);
+                iLenBuf = iCountBatch = 0;
+                memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);                
+            }
+        }
+        Fwrite(buf, sizeof(char), iLenBuf, fpReport);
 
         /* Release the file pointer. */
         Fclose(fpReport);
