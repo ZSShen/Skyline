@@ -54,7 +54,7 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
         iLenPath += strlen(REPORT_PREFIX_TXT_SECTION_ENTROPY);
 
         if (iLenPath > BUF_SIZE_LARGE) {
-            Log1("The output folder path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
             rc = -1;
             goto EXIT;
         }
@@ -159,6 +159,9 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
             Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         #endif
     
+        //---------------------------------------------------------
+        //  First phase: Prepare the drawing commands for gunplot.
+        //---------------------------------------------------------
         /* Generate the report path string. */
         memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
     
@@ -169,16 +172,16 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
             bHasSep = true;        
         }
         iLenPath += strlen(cszSampleName);
-        iLenPath += strlen(REPORT_PREFIX_TXT_SECTION_ENTROPY);
+        iLenPath += strlen(REPORT_PREFIX_TXT_NGRAM_MODEL);
 
         if (iLenPath > BUF_SIZE_LARGE) {
-            Log1("The output folder path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
             rc = -1;
             goto EXIT;
         }
         
         if (bHasSep == false)
-            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_SECTION_ENTROPY);
+            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_NGRAM_MODEL);
         else
             sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_PREFIX_TXT_NGRAM_MODEL);
@@ -224,11 +227,94 @@ EXIT:
 /**
  * ReportPlotNGramModel(): Plot the visualized trend line of n-gram model with gnuplot utility.
  */
-int ReportPlotNGramModel(Report *self, const char *cszDirPath, const char *cszSampleName) {
-    int rc;
+int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
+    bool    bHasSep;
+    int     rc, state, iLenPath, iLenBuf;
+    FILE    *fpScript;
+    char    buf[BUF_SIZE_LARGE], bufHelp[BUF_SIZE_LARGE];
 
     rc = 0;
 
+    try {
+        #if defined(_WIN32)
+
+        #elif defined(__linux__)
+            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        #endif
+
+        /* Check if the raw n-gram dump exists. */
+        memset(bufHelp, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
+        bHasSep = false;
+        iLenPath = strlen(cszDirPath);
+        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+            iLenPath++;
+            bHasSep = true;        
+        }
+        iLenPath += strlen(cszSampleName);
+        iLenPath += strlen(REPORT_PREFIX_TXT_NGRAM_MODEL);
+
+        if (iLenPath > BUF_SIZE_LARGE) {
+            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+            rc = -1;
+            goto EXIT;
+        }
+        
+        if (bHasSep == false)
+            sprintf(bufHelp, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_NGRAM_MODEL);
+        else
+            sprintf(bufHelp, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_PREFIX_TXT_NGRAM_MODEL);
+        
+        state = access(bufHelp, F_OK);        
+        if (state == -1) {
+            Log1("The raw n-gram dump at %s does not exist.\n", bufHelp);
+            goto EXIT;
+        }
+
+        /* Generate the script path string. */
+        memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
+    
+        bHasSep = false;
+        iLenPath = strlen(cszDirPath);
+        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+            iLenPath++;
+            bHasSep = true;        
+        }
+        iLenPath += strlen(cszSampleName);
+        iLenPath += strlen(REPORT_PREFIX_GNU_PLOT_SCRIPT);
+
+        if (iLenPath > BUF_SIZE_LARGE) {
+            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+            rc = -1;
+            goto EXIT;
+        }
+        
+        if (bHasSep == false)
+            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_GNU_PLOT_SCRIPT);
+        else
+            sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_PREFIX_GNU_PLOT_SCRIPT);
+
+        /* Prepare the file pointer for the script. */
+        fpScript = Fopen(buf, "w");
+        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
+        
+        /* 1. Set the size of output image file. */
+        sprintf(buf, "set terminal png size %d, %d\n", REPORT_IMAGE_SIZE_WIDTH, REPORT_IMAGE_SIZE_HEIGHT);
+        iLenBuf = strlen(buf);
+
+        
+
+        /* Release the file pointer. */
+        Fclose(fpScript);
+        
+    } catch(EXCEPT_IO_DIR_MAKE) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_WRITE) {
+        rc = -1;
+    } end_try;
+
+EXIT:
     return rc;
 }
 

@@ -6,6 +6,7 @@
     #include <shellapi.h>
 #elif defined(__linux__)
     #include <errno.h>
+    #include <unistd.h>
     #include <sys/stat.h>
 #endif
 
@@ -100,7 +101,7 @@ typedef unsigned long   ulong;
 #define REPORT_PREFIX_TXT_SECTION_ENTROPY   "_entropy.txt"
 #define REPORT_PREFIX_TXT_NGRAM_MODEL       "_ngram_model.txt"
 #define REPORT_PREFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
-#define REPORT_PREFIX_GNU_PLOT_SCRIPT       "_plot_script"
+#define REPORT_PREFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
 
 /* Criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (1920)

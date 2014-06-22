@@ -246,7 +246,9 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
             goto EXIT;
 
         /* Generate the visualized n-gram model. */
-
+        rc = pReport->plotNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+        if (rc != 0)
+            goto EXIT;
     } else 
         rc = -1;
 
