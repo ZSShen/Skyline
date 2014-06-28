@@ -30,7 +30,7 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
     FILE        *fpReport;
     SectionInfo *pSection;
     EntropyInfo *pEntropy;
-    char        buf[BUF_SIZE_LARGE + 1];
+    char        buf[BUF_SIZE_LARGE + 1], szPathReport[BUF_SIZE_MID + 1];
 
     rc = 0;
 
@@ -42,31 +42,30 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
         #endif
 
         /* Generate the report path string. */
-        memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
-    
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
-        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+        if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
             bHasSep = true;        
         }
         iLenPath += strlen(cszSampleName);
-        iLenPath += strlen(REPORT_PREFIX_TXT_SECTION_ENTROPY);
+        iLenPath += strlen(REPORT_POSTFIX_TXT_SECTION_ENTROPY);
 
-        if (iLenPath > BUF_SIZE_LARGE) {
-            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+        if (iLenPath > BUF_SIZE_MID) {
+            Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
             rc = -1;
             goto EXIT;
         }
-        
-        if (bHasSep == false)
-            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_SECTION_ENTROPY);
+
+        memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        if (bHasSep == true)
+            sprintf(szPathReport, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_TXT_SECTION_ENTROPY);
         else
-            sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
-                    REPORT_PREFIX_TXT_SECTION_ENTROPY);
+            sprintf(szPathReport, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_POSTFIX_TXT_SECTION_ENTROPY);
         
         /* Prepare the file pointer for the report. */
-        fpReport = Fopen(buf, "w");
+        fpReport = Fopen(szPathReport, "w");
 
         /* Log the total number of sections. */
         usNumSections = pPEInfo->pPEHeader->usNumSections;
@@ -148,7 +147,7 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
     int     rc, i, iLenPath, iLenBuf, iCountBatch;
     FILE    *fpReport;
     Slice   **arrSlice;
-    char    buf[BUF_SIZE_LARGE + 1];
+    char    buf[BUF_SIZE_LARGE + 1], szPathReport[BUF_SIZE_MID + 1];
 
     rc = 0;
 
@@ -158,36 +157,32 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
         #elif defined(__linux__)
             Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
         #endif
-    
-        //---------------------------------------------------------
-        //  First phase: Prepare the drawing commands for gunplot.
-        //---------------------------------------------------------
+        
         /* Generate the report path string. */
-        memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
-    
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
-        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+        if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
             bHasSep = true;        
         }
         iLenPath += strlen(cszSampleName);
-        iLenPath += strlen(REPORT_PREFIX_TXT_NGRAM_MODEL);
+        iLenPath += strlen(REPORT_POSTFIX_TXT_NGRAM_MODEL);
 
-        if (iLenPath > BUF_SIZE_LARGE) {
-            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+        if (iLenPath > BUF_SIZE_MID) {
+            Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
             rc = -1;
             goto EXIT;
         }
-        
-        if (bHasSep == false)
-            sprintf(buf, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_NGRAM_MODEL);
+
+        memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        if (bHasSep == true)
+            sprintf(szPathReport, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_TXT_NGRAM_MODEL);
         else
-            sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
-                    REPORT_PREFIX_TXT_NGRAM_MODEL);
+            sprintf(szPathReport, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_POSTFIX_TXT_NGRAM_MODEL);
 
         /* Prepare the file pointer for the report. */
-        fpReport = Fopen(buf, "w");
+        fpReport = Fopen(szPathReport, "w");
 
         /* Log each piece of n-gram model slice. */
         arrSlice = pNGram->arrSlice;
@@ -231,7 +226,7 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
     bool    bHasSep;
     int     rc, state, iLenPath, iLenBuf;
     FILE    *fpScript;
-    char    buf[BUF_SIZE_LARGE], bufHelp[BUF_SIZE_LARGE];
+    char    buf[BUF_SIZE_LARGE], bufHelp[BUF_SIZE_LARGE], szPathReport[BUF_SIZE_MID + 1];
 
     rc = 0;
 
@@ -243,35 +238,41 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         #endif
 
         /* Check if the raw n-gram dump exists. */
-        memset(bufHelp, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
-        if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+        if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
-            bHasSep = true;        
+            bHasSep = true;
         }
         iLenPath += strlen(cszSampleName);
-        iLenPath += strlen(REPORT_PREFIX_TXT_NGRAM_MODEL);
+        iLenPath += strlen(REPORT_POSTFIX_TXT_NGRAM_MODEL);
 
-        if (iLenPath > BUF_SIZE_LARGE) {
-            Log1("The file path is too long (Longer than %d bytes).\n", BUF_SIZE_LARGE);
+        if (iLenPath > BUF_SIZE_MID) {
+            Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
             rc = -1;
             goto EXIT;
         }
-        
-        if (bHasSep == false)
-            sprintf(bufHelp, "%s%s%s", cszDirPath, cszSampleName, REPORT_PREFIX_TXT_NGRAM_MODEL);
+
+        memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        if (bHasSep == true)
+            sprintf(bufHelp, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_TXT_NGRAM_MODEL);
         else
             sprintf(bufHelp, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
-                    REPORT_PREFIX_TXT_NGRAM_MODEL);
-        
-        state = access(bufHelp, F_OK);        
+                    REPORT_POSTFIX_TXT_NGRAM_MODEL);
+
+        #if defined(_WIN32)        
+
+        #elif defined(__linux__)        
+            state = access(bufHelp, F_OK);
+        #endif
+
         if (state == -1) {
-            Log1("The raw n-gram dump at %s does not exist.\n", bufHelp);
+            Log1("The raw n-gram dump at %s does not exist.\n", szPathReport);
             goto EXIT;
         }
 
         /* Generate the script path string. */
+        /*        
         memset(buf, 0, sizeof(char) * (BUF_SIZE_LARGE + 1));
     
         bHasSep = false;
@@ -294,19 +295,19 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         else
             sprintf(buf, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_PREFIX_GNU_PLOT_SCRIPT);
-
+        */
         /* Prepare the file pointer for the script. */
-        fpScript = Fopen(buf, "w");
-        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
+        //fpScript = Fopen(buf, "w");
+        //memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
         
         /* 1. Set the size of output image file. */
-        sprintf(buf, "set terminal png size %d, %d\n", REPORT_IMAGE_SIZE_WIDTH, REPORT_IMAGE_SIZE_HEIGHT);
-        iLenBuf = strlen(buf);
+        //sprintf(buf, "set terminal png size %d, %d\n", REPORT_IMAGE_SIZE_WIDTH, REPORT_IMAGE_SIZE_HEIGHT);
+        //iLenBuf = strlen(buf);
 
         
 
         /* Release the file pointer. */
-        Fclose(fpScript);
+        //Fclose(fpScript);
         
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;

@@ -98,8 +98,8 @@ typedef unsigned long   ulong;
 #define UNI_GRAM_MAX_VALUE                  (256)   /* The maximum value of n-gram with dimension one. */
 
 /* The names of each kinds of reports. */
-#define REPORT_PREFIX_TXT_SECTION_ENTROPY   "_entropy.txt"
-#define REPORT_PREFIX_TXT_NGRAM_MODEL       "_ngram_model.txt"
+#define REPORT_POSTFIX_TXT_SECTION_ENTROPY   "_entropy.txt"
+#define REPORT_POSTFIX_TXT_NGRAM_MODEL       "_ngram_model.txt"
 #define REPORT_PREFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
 #define REPORT_PREFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
 
