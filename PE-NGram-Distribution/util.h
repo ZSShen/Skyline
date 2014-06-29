@@ -100,8 +100,8 @@ typedef unsigned long   ulong;
 /* The names of each kinds of reports. */
 #define REPORT_POSTFIX_TXT_SECTION_ENTROPY   "_entropy.txt"
 #define REPORT_POSTFIX_TXT_NGRAM_MODEL       "_ngram_model.txt"
-#define REPORT_PREFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
-#define REPORT_PREFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
+#define REPORT_POSTFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
+#define REPORT_POSTFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
 
 /* Criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (1920)
