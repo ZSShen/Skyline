@@ -228,7 +228,8 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
     bool    bHasSep;
     int     rc, state, iLenPath, iLenBuf;
     FILE    *fpScript;
-    char    buf[BUF_SIZE_LARGE], bufHelp[BUF_SIZE_LARGE], szPath[BUF_SIZE_MID + 1];
+    char    buf[BUF_SIZE_LARGE];
+    char    szPathLog[BUF_SIZE_MID + 1], szPathScript[BUF_SIZE_MID + 1], szPathImage[BUF_SIZE_MID + 1];
 
     rc = 0;
 
@@ -255,49 +256,23 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
             goto EXIT;
         }
 
-        memset(szPath, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        memset(szPathLog, 0, sizeof(char) * (BUF_SIZE_MID + 1));
         if (bHasSep == true)
-            sprintf(bufHelp, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_TXT_NGRAM_MODEL);
+            sprintf(szPathLog, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_TXT_NGRAM_MODEL);
         else
-            sprintf(bufHelp, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+            sprintf(szPathLog, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_POSTFIX_TXT_NGRAM_MODEL);
 
         #if defined(_WIN32)        
 
         #elif defined(__linux__)        
-            state = access(bufHelp, F_OK);
+            state = access(szPathLog, F_OK);
         #endif
 
         if (state == -1) {
-            Log1("The raw n-gram dump at %s does not exist.\n", szPath);
+            Log1("The raw n-gram dump at %s does not exist.\n", szPathLog);
             goto EXIT;
         }
-
-        /* Generate the path string for the gnuplot script. */
-        bHasSep = false;
-        iLenPath = strlen(cszDirPath);
-        if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
-            iLenPath++;
-            bHasSep = true;        
-        }
-        iLenPath += strlen(cszSampleName);
-        iLenPath += strlen(REPORT_POSTFIX_GNU_PLOT_SCRIPT);
-
-        if (iLenPath > BUF_SIZE_MID) {
-            Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
-            rc = -1;
-            goto EXIT;
-        }
-
-        memset(szPath, 0, sizeof(char) * (BUF_SIZE_MID + 1));
-        if (bHasSep == true)
-            sprintf(szPath, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_GNU_PLOT_SCRIPT);
-        else
-            sprintf(szPath, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
-                    REPORT_POSTFIX_GNU_PLOT_SCRIPT);
-        
-        /* Prepare the file pointer for the script. */
-        fpScript = Fopen(szPath, "w");
 
         /* Generate the path string for the outputted image. */
         bHasSep = false;
@@ -315,16 +290,73 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
             goto EXIT;
         }
         
-        memset(szPath, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        memset(szPathImage, 0, sizeof(char) * (BUF_SIZE_MID + 1));
         if (bHasSep == true)
-            sprintf(szPath, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_PNG_NGRAM_MODEL);
+            sprintf(szPathImage, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_PNG_NGRAM_MODEL);
         else
-            sprintf(szPath, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+            sprintf(szPathImage, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_POSTFIX_PNG_NGRAM_MODEL);
+
+        /* Generate the path string for the gnuplot script. */
+        bHasSep = false;
+        iLenPath = strlen(cszDirPath);
+        if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
+            iLenPath++;
+            bHasSep = true;        
+        }
+        iLenPath += strlen(cszSampleName);
+        iLenPath += strlen(REPORT_POSTFIX_GNU_PLOT_SCRIPT);
+
+        if (iLenPath > BUF_SIZE_MID) {
+            Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
+            rc = -1;
+            goto EXIT;
+        }
+
+        memset(szPathScript, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+        if (bHasSep == true)
+            sprintf(szPathScript, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_GNU_PLOT_SCRIPT);
+        else
+            sprintf(szPathScript, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
+                    REPORT_POSTFIX_GNU_PLOT_SCRIPT);
+        
+        /* Prepare the file pointer for the script. */
+        fpScript = Fopen(szPathScript, "w");
+
+        /* Compile the drawing commands. */
+        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);        
+        iLenBuf = 0;
+        
+        sprintf(buf, "set terminal png size %d, %d\n", REPORT_IMAGE_SIZE_WIDTH, REPORT_IMAGE_SIZE_HEIGHT);
+        iLenBuf = strlen(buf);
+
+        #if defined(_WIN32)        
+
+        #elif defined(__linux__)        
+            sprintf(buf + iLenBuf, "set output \"%s\"\n", szPathImage);
+        #endif
+        iLenBuf = strlen(buf);
+        
+        sprintf(buf + iLenBuf, "set title \"%s\"\n", cszSampleName);
+        iLenBuf = strlen(buf);
+
+        strcpy(buf + iLenBuf, "set xlabel \"Rate\"\nset ylabel \"Token\"\n");
+        iLenBuf = strlen(buf);
+
+        #if defined(_WIN32)
+
+        #elif defined(__linux__)
+            sprintf(buf + iLenBuf, "plot \"%s\" title \"\" with lines\nexit\n", szPathLog);
+        #endif
+        iLenBuf = strlen(buf);
+        Fwrite(buf, sizeof(char), iLenBuf, fpScript);
 
         /* Release the file pointer. */
         Fclose(fpScript);
-        
+
+        /* Execute the gnuplot script. */
+                
+
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_WRITE) {
