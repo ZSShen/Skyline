@@ -21,6 +21,11 @@
 #define EXCEPT_MEM              (EXCEPT_NO - 20)
 #define EXCEPT_MEM_ALLOC        (EXCEPT_MEM - 1)
 
+/* Process related errors. */
+#define EXCEPT_PROC             (EXCEPT_NO - 30)
+#define EXCEPT_PROC_OPEN        (EXCEPT_PROC - 1)
+#define EXCEPT_PROC_CLOSE       (EXCEPT_PROC - 2)
+
 
 /*===========================================================================*
  *                 Implementation of pseudo statements                       *

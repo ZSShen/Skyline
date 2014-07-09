@@ -47,6 +47,9 @@ typedef unsigned long   ulong;
 #define Fseek(p0, p1, p2)           FileSeek (p0, p1, p2,     __FILE__, __LINE__, __FUNCTION__)
 #define Fclose(p0)                  FileClose(p0)
 
+#define Popen(p0, p1)               ProcOpen (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
+#define Pclose(p0)                  ProcClose(p0,             __FILE__, __LINE__, __FUNCTION__)
+
 #if defined(_WIN32)
 
 #elif defined(__linux__)
@@ -137,17 +140,28 @@ void MemFree(void*);
 void MemCopy(void*, const void*, size_t, size_t);
 
 
-/* Wrapper for file manipulation utilties. */
+/* Wrapper for file manipulation utilities. */
 FILE* FileOpen(const char*, const char*, const char*, const int, const char*);
 size_t FileRead(void*, size_t, size_t, FILE*, const char*, const int, const char*);
 size_t FileWrite(void*, size_t, size_t, FILE*, const char*, const int, const char*);
 int FileSeek(FILE*, long, int, const char*, const int, const char*);
 int FileClose(FILE*);
 
+
+/* Wrapper for directory manipulation utilities. */
 #if defined(_WIN32)
 
 #elif defined(__linux__)
     int DirMake(const char*, mode_t, const char*, const int, const char*);
+#endif
+
+
+/* Wrapper for process manipulation utilities. */
+#if defined(_WIN32)
+
+#elif defined(__linux__)
+    FILE* ProcOpen(const char*, const char*, const char*, const int, const char*);
+    int ProcClose(FILE*, const char*, const int, const char*);
 #endif
 
 #endif

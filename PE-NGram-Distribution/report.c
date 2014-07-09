@@ -227,7 +227,7 @@ EXIT:
 int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
     bool    bHasSep;
     int     rc, state, iLenPath, iLenBuf;
-    FILE    *fpScript;
+    FILE    *fpScript, *fpProc;
     char    buf[BUF_SIZE_LARGE];
     char    szPathLog[BUF_SIZE_MID + 1], szPathScript[BUF_SIZE_MID + 1], szPathImage[BUF_SIZE_MID + 1];
 
@@ -350,20 +350,32 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         #endif
         iLenBuf = strlen(buf);
         Fwrite(buf, sizeof(char), iLenBuf, fpScript);
-
-        /* Release the file pointer. */
-        Fclose(fpScript);
-
+        
         /* Execute the gnuplot script. */
-                
+        #if defined(_WIN32)
 
+        #elif defined(__linux__)
+            memset(buf, 0, sizeof(char) * (BUF_SIZE_MID + 100));
+            sprintf(buf, "sh -c \'gnuplot %s\'", szPathScript);        
+            fpProc = Popen(buf, "r");
+            Pclose(fpProc);
+        #endif
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_WRITE) {
-        Fclose(fpScript);
         rc = -1;
-    } end_try;
+        goto CLOSE_FILE;
+    } catch(EXCEPT_PROC_OPEN) {
+        rc = -1;
+        goto CLOSE_FILE;
+    } catch(EXCEPT_PROC_CLOSE) {
+        rc = -1;
+        goto CLOSE_FILE;
+    }end_try;
 
+CLOSE_FILE:
+    /* Release the file pointer. */
+    Fclose(fpScript);
 EXIT:
     return rc;
 }

@@ -180,13 +180,14 @@ int FileClose(FILE *fptr) {
 }
 
 
-/**
- * DirMake(): Wrapper function for mkdir().
- */
+
 
 #if defined(_WIN32)
 
 #elif defined(__linux__)
+/**
+ * DirMake(): Wrapper function for mkdir().
+ */
 int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
     int rc;
 
@@ -198,4 +199,33 @@ int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const 
 
     return rc;
 }
+
+
+/**
+ * ProcOpen(): Wrapper function of popen().
+ */
+FILE* ProcOpen(const char *cszCommand, const char *cszMode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+    FILE *fptr;
+
+    fptr = popen(cszCommand, cszMode);
+    if (fptr == NULL)
+        throw(EXCEPT_PROC_OPEN);
+
+    return fptr;
+}
+
+
+/**
+ * ProcClose(): Wrapper function of pclose().
+ */
+int ProcClose(FILE *fptr, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+    int rc;
+
+    rc = pclose(fptr);
+    if (rc == -1)
+        throw(EXCEPT_PROC_CLOSE);
+
+    return 0;
+}
+
 #endif
