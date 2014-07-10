@@ -106,6 +106,9 @@ typedef unsigned long   ulong;
 #define REPORT_POSTFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
 #define REPORT_POSTFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
 
+/* The paths of plotting utility. */
+#define PATH_GNUPLOT_LINUX                   "/usr/bin/gnuplot"
+
 /* Criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (1920)
 #define REPORT_IMAGE_SIZE_HEIGHT            (1080)
