@@ -106,6 +106,18 @@ typedef unsigned long   ulong;
 #define REPORT_POSTFIX_PNG_NGRAM_MODEL       "_ngram_model.png"
 #define REPORT_POSTFIX_GNU_PLOT_SCRIPT       "_plot_script.gnu"
 
+/* The bitmasks of each kinds of reports. */
+#define MASK_REPORT_SECTION_ENTROPY         0x1
+#define MASK_REPORT_TXT_NGRAM               MASK_REPORT_SECTION_ENTROPY << 8
+#define MASK_REPORT_PNG_NGRAM               MASK_REPORT_TXT_NGRAM << 8
+#define MASK_REPORT_PATTERN                 MASK_REPORT_PNG_NGRAM << 8
+
+/* The abbreviated token of each kinds of reports. */
+#define ABV_TOKEN_REPORT_SECTION_ENTROPY    'e'
+#define ABV_TOKEN_REPORT_TXT_NGRAM          't'
+#define ABV_TOKEN_REPORT_PNG_NGRAM          'i'
+#define ABV_TOKEN_REPORT_PATTERN            'p'
+
 /* The paths of plotting utility. */
 #define PATH_GNUPLOT_LINUX                   "/usr/bin/gnuplot"
 

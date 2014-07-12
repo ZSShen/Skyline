@@ -27,9 +27,10 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
 
 
 int main(int argc, char **argv) {
-    int             opt, rc, idxOpt;
+    int             opt, rc, idxOpt, i, iLen;
+    uint            uiMask;
     uchar           ucDimension;
-    const char      *cszInput, *cszOutput;
+    const char      *cszInput, *cszOutput, *cszReportSeries;
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
     NGram           *pNGram;
@@ -39,11 +40,12 @@ int main(int argc, char **argv) {
     static struct option Options[] = {
         {"input"    , required_argument, 0, 'i'},
         {"output"   , required_argument, 0, 'o'},
-        {"dimension", required_argument, 0, 'd'}
+        {"dimension", required_argument, 0, 'd'},
+        {"report"   , required_argument, 0, 'r'}
     };
-    const char *cszOrder = "i:o:d:";
+    const char *cszOrder = "i:o:d:r";
 
-    cszInput = cszOutput = NULL;
+    cszInput = cszOutput = cszReportSeries = NULL;
     rc = 0;
 
     /* Get the command line options. */
@@ -56,6 +58,10 @@ int main(int argc, char **argv) {
             }
             case 'o': {
                 cszOutput = optarg;
+                break;
+            }
+            case 'r': {
+                cszReportSeries = optarg;
                 break;
             }
             case 'd': {
@@ -89,6 +95,30 @@ int main(int argc, char **argv) {
         rc = -1;
         goto EXIT;
     }    
+
+    /* Check the designated report type. */
+    if ((cszReportSeries == NULL) || ((iLen = strlen(cszReportSeries)) == 0)) {
+        uiMask = MASK_REPORT_SECTION_ENTROPY | MASK_REPORT_TXT_NGRAM | \
+                 MASK_REPORT_PNG_NGRAM;
+    } else {
+        uiMask = 0;
+        for (i = 0 ; i < iLen ; i++) {
+            switch(cszReportSeries[i]) {
+                case ABV_TOKEN_REPORT_SECTION_ENTROPY: {
+                    uiMask |= MASK_REPORT_SECTION_ENTROPY;
+                    break;                
+                }
+                case ABV_TOKEN_REPORT_TXT_NGRAM: {
+                    uiMask |= MASK_REPORT_TXT_NGRAM;
+                    break;
+                }
+                case ABV_TOKEN_REPORT_PNG_NGRAM: {
+                    uiMask |= MASK_REPORT_PNG_NGRAM;
+                    break;            
+                }
+            }
+        }
+    }
 
     /* Prepare the basic PE features. */
     rc = parse_pe_info(&pPEInfo, cszInput);
