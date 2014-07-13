@@ -235,6 +235,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
     /* Initialize the NGram structure. */
     NGram_init(*ppNGram);
+
     if (*ppNGram != NULL) {
         pNGram = *ppNGram;
 
@@ -259,6 +260,7 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
     
     /* Initialize the Report structure. */
     Report_init(*ppReport);
+
     if (*ppReport != NULL) {
         pReport = *ppReport;
 
