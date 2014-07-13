@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
         uiMask = MASK_REPORT_SECTION_ENTROPY | MASK_REPORT_TXT_NGRAM | \
                  MASK_REPORT_PNG_NGRAM;
     } else {
+        printf("%s\n", cszReportSeries);
         uiMask = 0;
         for (i = 0 ; i < iLen ; i++) {
             switch(cszReportSeries[i]) {

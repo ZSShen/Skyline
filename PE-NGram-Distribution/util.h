@@ -8,6 +8,7 @@
     #include <errno.h>
     #include <unistd.h>
     #include <sys/stat.h>
+    #include <dirent.h>
 #endif
 
 #include <stdio.h>
@@ -53,7 +54,11 @@ typedef unsigned long   ulong;
 #if defined(_WIN32)
 
 #elif defined(__linux__)
+    #define Unlink(p0)              FileUnlink(p0,            __FILE__, __LINE__, __FUNCTION__)
     #define Mkdir(p0, p1)           DirMake  (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
+    #define Opendir(p0)             DirOpen  (p0,             __FILE__, __LINE__, __FUNCTION__)
+    #define Readdir(p0)             DirRead  (p0,             __FILE__, __LINE__, __FUNCTION__)
+    #define Closedir(p0)            DirClose (p0,             __FILE__, __LINE__, __FUNCTION__)
 #endif
 
 
@@ -167,7 +172,11 @@ int FileClose(FILE*);
 #if defined(_WIN32)
 
 #elif defined(__linux__)
-    int DirMake(const char*, mode_t, const char*, const int, const char*);
+    int  FileUnlink(const char*, const char*, const int, const char*);
+    int  DirMake(const char*, mode_t, const char*, const int, const char*);
+    DIR* DirOpen(const char*, const char*, const int, const char*);
+    int  DirClose(DIR*, const char*, const int, const char*);
+    struct dirent* DirRead(DIR*, const char*, const int, const char*);
 #endif
 
 

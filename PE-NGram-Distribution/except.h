@@ -15,7 +15,10 @@
 #define EXCEPT_IO_FILE_READ     (EXCEPT_IO - 2)
 #define EXCEPT_IO_FILE_WRITE    (EXCEPT_IO - 3)
 #define EXCEPT_IO_FILE_SEEK     (EXCEPT_IO - 4)
-#define EXCEPT_IO_DIR_MAKE      (EXCEPT_IO - 5)
+#define EXCEPT_IO_FILE_UNLINK   (EXCEPT_IO - 5)
+#define EXCEPT_IO_DIR_MAKE      (EXCEPT_IO - 6)
+#define EXCEPT_IO_DIR_OPEN      (EXCEPT_IO - 7)
+#define EXCEPT_IO_DIR_READ      (EXCEPT_IO - 8)
 
 /* Memory related errors. */
 #define EXCEPT_MEM              (EXCEPT_NO - 20)
@@ -48,10 +51,10 @@
 
 /* Implementation for throw statement. */
 #if defined(__WIN32)
-    #define throw(ExceptNum)    { WriteLog(cszPathFile, iLineNo, cszFunc, "Error Code: %d\n", GetLastError()); \
+    #define throw(ExceptNum)    { WriteLog(cszPathSrc, iLineNo, cszFunc, "Error Code: %d\n", GetLastError()); \
                                   longjmp(bufExcept, ExceptNum); }
 #elif defined(__linux__)
-    #define throw(ExceptNum)    { WriteLog(cszPathFile, iLineNo, cszFunc, "Message: %s\n", strerror(errno)); \
+    #define throw(ExceptNum)    { WriteLog(cszPathSrc, iLineNo, cszFunc, "Message: %s\n", strerror(errno)); \
                                   longjmp(bufExcept, ExceptNum); }
 #endif
 

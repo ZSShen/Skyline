@@ -20,6 +20,63 @@ void ReportDeinit(Report *self) {
 
 
 /**
+ * ReportGenerateFolder(): Generate the folder to store reports.
+ */
+int ReportGenerateFolder(Report *self, const char *cszDirPath) {
+    int     rc, state, iLenPath, iLenRest;
+    DIR     *dir;
+    char    szPathReport[BUF_SIZE_MID + 1];
+    struct dirent *entry;
+    
+    rc = 0;
+
+    try {
+        #if defined(_WIN32)
+
+        #elif defined(__linux__)
+            state = Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            
+            /* The folder already exists and we should remove all the files residing in it. */            
+            if (state != 0) {
+                dir = Opendir(cszDirPath);
+                
+                iLenPath = strlen(cszDirPath);
+                memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));                
+                strcpy(szPathReport, cszDirPath);
+                if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+                    szPathReport[iLenPath] = OS_PATH_SEPARATOR;
+                    iLenPath;
+                }
+
+                while ((entry = Readdir(dir) != NULL)) {
+                    strcpy(szPathReport + iLenPath, entry->d_name);
+                    Unlink(szPathReport);
+                    iLenRest = strlen(entry->d_name);
+                    memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest);                        
+                }
+            }
+        #endif
+
+    } catch(EXCEPT_IO_DIR_MAKE) {
+        rc = -1;
+        goto EXIT;
+    } catch(EXCEPT_IO_DIR_OPEN) {
+        rc = -1;  
+        goto EXIT;  
+    } catch(EXCEPT_IO_DIR_READ) {
+        rc = -1;
+    } catch(EXCEPT_IO_FILE_UNLINK) {
+        rc = -1;    
+    } end_try;
+    
+    Closedir(dir);
+
+EXIT:
+    return rc;
+}
+
+
+/**
  * ReportLogEntropyDistribution(): Log the entropy distribution of all the sections.
  */
 int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszDirPath, const char *cszSampleName) {

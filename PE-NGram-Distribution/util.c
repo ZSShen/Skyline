@@ -5,7 +5,7 @@
 /**
  * WriteLog(): Print the designated log message.
  */
-void WriteLog(const char* cszPathFile, int iLineNo, const char* cszFunc, const char* cszFormat, ...) {
+void WriteLog(const char* cszPathSrc, int iLineNo, const char* cszFunc, const char* cszFormat, ...) {
     char      szLogBuf[BUF_SIZE_MID];
     int       iLen;
     time_t    nTime;        
@@ -30,7 +30,7 @@ void WriteLog(const char* cszPathFile, int iLineNo, const char* cszFunc, const c
     tmTime = localtime(&nTime);
     szTime = asctime(tmTime);
 
-    printf("[%s, %d, %s] %s%s", cszPathFile, iLineNo, cszFunc, szTime, szLogBuf);
+    printf("[%s, %d, %s] %s%s", cszPathSrc, iLineNo, cszFunc, szTime, szLogBuf);
 
     return;
 }
@@ -39,7 +39,7 @@ void WriteLog(const char* cszPathFile, int iLineNo, const char* cszFunc, const c
 /**
  * MemAlloc(): Wrapper function for malloc().
  */
-void* MemAlloc(size_t nLength, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+void* MemAlloc(size_t nLength, const char *cszPathSrc, const int iLineNo, const char* cszFunc) {
     void *ptr;
 
     assert(nLength > 0);
@@ -54,7 +54,7 @@ void* MemAlloc(size_t nLength, const char *cszPathFile, const int iLineNo, const
 /**
  * MemCalloc(): Wrapper function for calloc().
  */
-void* MemCalloc(size_t nLength, size_t nSize, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+void* MemCalloc(size_t nLength, size_t nSize, const char *cszPathSrc, const int iLineNo, const char* cszFunc) {
     void *ptr;
     
     assert(nLength > 0);
@@ -69,7 +69,7 @@ void* MemCalloc(size_t nLength, size_t nSize, const char *cszPathFile, const int
 /**
  * MemRealloc(): Wrapper function for realloc().
  */
-void* MemRealloc(void *pOld, size_t nLength, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+void* MemRealloc(void *pOld, size_t nLength, const char *cszPathSrc, const int iLineNo, const char* cszFunc) {
     void *pNew;
 
     assert(nLength > 0);
@@ -106,7 +106,7 @@ void MemCopy(void *pTge, const void *pSrc, size_t nLength, size_t nSize) {
 /**
  * FileOpen(): Wrapper function for fopen().
  */
-FILE* FileOpen(const char *cszPath, const char *cszMode, const char *cszPathFile, const int iLineNo, const char* cszFunc) {
+FILE* FileOpen(const char *cszPath, const char *cszMode, const char *cszPathSrc, const int iLineNo, const char* cszFunc) {
     FILE *fptr;
     
     fptr = fopen(cszPath, cszMode);
@@ -120,7 +120,7 @@ FILE* FileOpen(const char *cszPath, const char *cszMode, const char *cszPathFile
 /**
  * FileRead(): Wrapper function for fread().
  */
-size_t FileRead(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+size_t FileRead(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     size_t  nRead;
     int     rc;
     
@@ -138,7 +138,7 @@ size_t FileRead(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char 
 /**
  * FileWrite(): Wrapper function for fwrite().
  */
-size_t FileWrite(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+size_t FileWrite(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     size_t  nWrite;
     int     rc;
     
@@ -156,7 +156,7 @@ size_t FileWrite(void *ptr, size_t nSize, size_t nLength, FILE *fptr, const char
 /**
  * FileSeek(): Wrapper function for fseek().
  */
-int FileSeek(FILE *fptr, long iOffset, int iOrigin, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+int FileSeek(FILE *fptr, long iOffset, int iOrigin, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
     
     rc = fseek(fptr, iOffset, iOrigin);
@@ -173,7 +173,7 @@ int FileSeek(FILE *fptr, long iOffset, int iOrigin, const char *cszPathFile, con
 int FileClose(FILE *fptr) {
     int rc; 
 
-   if (fptr != NULL)
+    if (fptr != NULL)
         rc = fclose(fptr);
     
     return rc;
@@ -186,9 +186,23 @@ int FileClose(FILE *fptr) {
 
 #elif defined(__linux__)
 /**
+ * FileUnlink(): Wrapper function for unlink().
+ */
+int FileUnlink(const char *cszPathFile, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    int rc;
+
+    rc = unlink(cszPathFile);
+    if (rc != 0)
+        throw(EXCEPT_IO_FILE_UNLINK);
+
+    return rc;
+}
+
+
+/**
  * DirMake(): Wrapper function for mkdir().
  */
-int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
     rc = mkdir(cszPathDir, mode);
@@ -202,9 +216,53 @@ int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathFile, const 
 
 
 /**
+ * DirMake(): Wrapper function for opendir().
+ */
+DIR* DirOpen(const char *cszPathDir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    int oldErrno;    
+    DIR *dir;
+    
+    oldErrno = errno;
+    dir = opendir(cszPathDir);
+    if (dir == NULL) {   
+        if (oldErrno != errno)    
+            throw(EXCEPT_IO_DIR_OPEN);
+    }
+    return dir;
+}
+
+
+/**
+ * DirClose(): Wrapper function for closedir().
+ */
+int DirClose(DIR *dir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    int rc;
+        
+    if (dir != NULL)
+        rc = closedir(dir);
+
+    return rc;
+}
+
+
+/**
+ * DirRead(): Wrapper function for readdir().
+ */
+struct dirent* DirRead(DIR *dir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    struct dirent *entry;
+
+    entry = readdir(dir);
+    if (entry == NULL)
+        throw(EXCEPT_IO_DIR_READ);
+
+    return entry;
+}
+
+
+/**
  * ProcOpen(): Wrapper function of popen().
  */
-FILE* ProcOpen(const char *cszCommand, const char *cszMode, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+FILE* ProcOpen(const char *cszCommand, const char *cszMode, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     FILE *fptr;
 
     fptr = popen(cszCommand, cszMode);
@@ -218,7 +276,7 @@ FILE* ProcOpen(const char *cszCommand, const char *cszMode, const char *cszPathF
 /**
  * ProcClose(): Wrapper function of pclose().
  */
-int ProcClose(FILE *fptr, const char *cszPathFile, const int iLineNo, const char *cszFunc) {
+int ProcClose(FILE *fptr, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
     rc = pclose(fptr);

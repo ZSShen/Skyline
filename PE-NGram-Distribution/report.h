@@ -39,6 +39,19 @@ void ReportDeinit(Report *self);
 
 
 /**
+ * This function generates the folder with the designated path to store reports.
+ * Note that it will removes all the files in the folder if it already exists.
+ *
+ * @param   self            The pointer to the Report structure.
+ * @param   cszDirPath      The path to the output folder.
+ *
+ * @return              0: The folder is generated successfully.
+ *                    < 0: Exception occurs while traversing file system.
+ */
+int ReportGenerateFolder(Report *self, const char* cszDirPath);
+
+
+/**
  * This function logs the entropy distribution of all the sections.
  *
  * @param   self            The pointer to the Report structure.
