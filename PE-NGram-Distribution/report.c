@@ -45,7 +45,7 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
                 strcpy(szPathReport, cszDirPath);
                 if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
                     szPathReport[iLenPath] = OS_PATH_SEPARATOR;
-                    iLenPath;
+                    iLenPath++;
                 }
 
                 while ((entry = Readdir(dir) != NULL)) {

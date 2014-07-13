@@ -191,11 +191,13 @@ int FileClose(FILE *fptr) {
 int FileUnlink(const char *cszPathFile, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
-    rc = unlink(cszPathFile);
-    if (rc != 0)
-        throw(EXCEPT_IO_FILE_UNLINK);
+    if (cszPathFile != NULL) {
+        rc = unlink(cszPathFile);
+        if (rc != 0)
+            throw(EXCEPT_IO_FILE_UNLINK);
+    }
 
-    return rc;
+    return 0;
 }
 
 
@@ -205,10 +207,13 @@ int FileUnlink(const char *cszPathFile, const char *cszPathSrc, const int iLineN
 int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
-    rc = mkdir(cszPathDir, mode);
-    if (rc != 0) {
-        if (errno != EEXIST)
-            throw(EXCEPT_IO_DIR_MAKE);
+    rc = -1;
+    if (cszPathDir != NULL) {
+        rc = mkdir(cszPathDir, mode);
+        if (rc != 0) {
+            if (errno != EEXIST)
+                throw(EXCEPT_IO_DIR_MAKE);
+        }
     }
 
     return rc;
