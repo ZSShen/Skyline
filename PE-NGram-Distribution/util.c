@@ -180,8 +180,6 @@ int FileClose(FILE *fptr) {
 }
 
 
-
-
 #if defined(_WIN32)
 
 #elif defined(__linux__)
@@ -191,11 +189,9 @@ int FileClose(FILE *fptr) {
 int FileUnlink(const char *cszPathFile, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
-    if (cszPathFile != NULL) {
-        rc = unlink(cszPathFile);
-        if (rc != 0)
-            throw(EXCEPT_IO_FILE_UNLINK);
-    }
+    rc = unlink(cszPathFile);
+    if (rc != 0)
+        throw(EXCEPT_IO_FILE_UNLINK);
 
     return 0;
 }
@@ -207,13 +203,10 @@ int FileUnlink(const char *cszPathFile, const char *cszPathSrc, const int iLineN
 int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
     int rc;
 
-    rc = -1;
-    if (cszPathDir != NULL) {
-        rc = mkdir(cszPathDir, mode);
-        if (rc != 0) {
-            if (errno != EEXIST)
-                throw(EXCEPT_IO_DIR_MAKE);
-        }
+    rc = mkdir(cszPathDir, mode);
+    if (rc != 0) {
+        if (errno != EEXIST)
+            throw(EXCEPT_IO_DIR_MAKE);
     }
 
     return rc;
@@ -224,15 +217,15 @@ int DirMake(const char *cszPathDir, mode_t mode, const char *cszPathSrc, const i
  * DirMake(): Wrapper function for opendir().
  */
 DIR* DirOpen(const char *cszPathDir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
-    int oldErrno;    
     DIR *dir;
     
-    oldErrno = errno;
-    dir = opendir(cszPathDir);
-    if (dir == NULL) {   
-        if (oldErrno != errno)    
+    dir = NULL;
+    if (cszPathDir != NULL) {
+        dir = opendir(cszPathDir);
+        if (dir == NULL) 
             throw(EXCEPT_IO_DIR_OPEN);
     }
+
     return dir;
 }
 
@@ -241,12 +234,11 @@ DIR* DirOpen(const char *cszPathDir, const char *cszPathSrc, const int iLineNo, 
  * DirClose(): Wrapper function for closedir().
  */
 int DirClose(DIR *dir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
-    int rc;
         
     if (dir != NULL)
-        rc = closedir(dir);
+        closedir(dir);
 
-    return rc;
+    return 0;
 }
 
 
@@ -254,11 +246,18 @@ int DirClose(DIR *dir, const char *cszPathSrc, const int iLineNo, const char *cs
  * DirRead(): Wrapper function for readdir().
  */
 struct dirent* DirRead(DIR *dir, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    int oldErrno;
     struct dirent *entry;
 
-    entry = readdir(dir);
-    if (entry == NULL)
-        throw(EXCEPT_IO_DIR_READ);
+    entry = NULL;
+    if (dir != NULL) {
+        oldErrno = errno;
+        entry = readdir(dir);
+        if (entry == NULL) {
+            if (errno != oldErrno)        
+                throw(EXCEPT_IO_DIR_READ);
+        }
+    }
 
     return entry;
 }
