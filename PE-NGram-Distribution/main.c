@@ -268,6 +268,11 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
         /* Retrieve the sample name. */
         cszSampleName = pPEInfo->szSampleName;
 
+        /* Generate the report folder. */
+        rc = pReport->generateFolder(pReport, cszOutDir);
+        if (rc != 0)
+            goto EXIT;
+
         /* Generate the entropy distribution report. */
         rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
         if (rc != 0)

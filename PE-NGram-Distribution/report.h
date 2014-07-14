@@ -7,6 +7,7 @@
 #include "ngram.h"
 
 typedef struct _Report {
+    int (*generateFolder)         (struct _Report*, const char*);
     int (*logEntropyDistribution) (struct _Report*, PEInfo*, const char*, const char*);
     int (*logNGramModel)          (struct _Report*, NGram*,  const char*, const char*);
     int (*plotNGramModel)         (struct _Report*, NGram*, const char*, const char*);

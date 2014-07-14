@@ -258,7 +258,7 @@ struct dirent* DirRead(DIR *dir, const char *cszPathSrc, const int iLineNo, cons
                 throw(EXCEPT_IO_DIR_READ);
         }
     }
-
+    
     return entry;
 }
 

@@ -4,6 +4,7 @@
 /* Constructor for Report structure. */
 void ReportInit(Report *self) {
 
+    self->generateFolder = ReportGenerateFolder;
     self->logEntropyDistribution = ReportLogEntropyDistribution;
     self->logNGramModel = ReportLogNGramModel;
     self->plotNGramModel = ReportPlotNGramModel;
@@ -39,24 +40,27 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
             /* The folder already exists and we should remove all the files residing in it. */            
             if (state != 0) {
                 dir = Opendir(cszDirPath);
-                
-                iLenPath = strlen(cszDirPath);
-                memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));                
-                strcpy(szPathReport, cszDirPath);
-                if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
-                    szPathReport[iLenPath] = OS_PATH_SEPARATOR;
-                    iLenPath++;
-                }
+                if (dir != NULL) {    
+                    iLenPath = strlen(cszDirPath);
+                    memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));                
+                    strcpy(szPathReport, cszDirPath);
 
-                while ((entry = Readdir(dir) != NULL)) {
-                    strcpy(szPathReport + iLenPath, entry->d_name);
-                    Unlink(szPathReport);
-                    iLenRest = strlen(entry->d_name);
-                    memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest);                        
+                    if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+                        szPathReport[iLenPath] = OS_PATH_SEPARATOR;
+                        iLenPath++;
+                    }
+
+                    while ((entry = Readdir(dir)) != NULL) {
+                        if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
+                            strcpy(szPathReport + iLenPath, entry->d_name);
+                            Unlink(szPathReport);
+                            iLenRest = strlen(entry->d_name);
+                            memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest); 
+                        }                       
+                    }
                 }
             }
         #endif
-
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
         goto EXIT;
@@ -92,12 +96,6 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
     rc = 0;
 
     try {
-        #if defined(_WIN32)
-
-        #elif defined(__linux__)
-            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        #endif
-
         /* Generate the report path string. */
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
@@ -210,12 +208,6 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
     rc = 0;
 
     try {
-        #if defined(_WIN32)
-
-        #elif defined(__linux__)
-            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        #endif
-        
         /* Generate the report path string. */
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
@@ -291,12 +283,6 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
     rc = 0;
 
     try {
-        #if defined(_WIN32)
-
-        #elif defined(__linux__)
-            Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        #endif
-
         /* Check if the raw n-gram dump exists. */
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
