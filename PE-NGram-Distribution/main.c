@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     int             opt, rc, idxOpt, i, iLen;
     uint            uiMask;
     uchar           ucDimension;
-    const char      *cszInput, *cszOutput, *cszReportSeries;
+    const char      *cszInput, *cszOutput, *cszReportSeries, *cszOrder;
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
     NGram           *pNGram;
@@ -41,10 +41,10 @@ int main(int argc, char **argv) {
         {"input"    , required_argument, 0, 'i'},
         {"output"   , required_argument, 0, 'o'},
         {"dimension", required_argument, 0, 'd'},
-        {"report"   , required_argument, 0, 'r'}
+        {"report"   , required_argument, 0, 'r'},
     };
-    const char *cszOrder = "i:o:d:r";
-
+    
+    cszOrder = "i:o:d:r:";
     cszInput = cszOutput = cszReportSeries = NULL;
     rc = 0;
 
@@ -101,7 +101,6 @@ int main(int argc, char **argv) {
         uiMask = MASK_REPORT_SECTION_ENTROPY | MASK_REPORT_TXT_NGRAM | \
                  MASK_REPORT_PNG_NGRAM;
     } else {
-        printf("%s\n", cszReportSeries);
         uiMask = 0;
         for (i = 0 ; i < iLen ; i++) {
             switch(cszReportSeries[i]) {
