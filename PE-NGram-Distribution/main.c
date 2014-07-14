@@ -23,7 +23,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 
 
 /* Bundle operations to manipulate Report structure and generate the relevant reports. */
-int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir);
+int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask);
 
 
 int main(int argc, char **argv) {
@@ -119,6 +119,11 @@ int main(int argc, char **argv) {
             }
         }
     }
+    if (uiMask == 0) {
+        print_usage();
+        rc = -1;
+        goto EXIT;
+    }
 
     /* Prepare the basic PE features. */
     rc = parse_pe_info(&pPEInfo, cszInput);
@@ -136,8 +141,7 @@ int main(int argc, char **argv) {
         goto FREE_NG;
 
     /* Generate the relevant reports for the model. */
-    rc = generate_report(&pReport, pPEInfo, pNGram, cszOutput);
-
+    rc = generate_report(&pReport, pPEInfo, pNGram, cszOutput, uiMask);
 
     /* Deinitialize the Report structure*/
     Report_deinit(pReport);
@@ -251,7 +255,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 }
 
 
-int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir) {
+int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask) {
     int        rc;
     const char *cszSampleName;
     Report     *pReport;
@@ -273,19 +277,25 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
             goto EXIT;
 
         /* Generate the entropy distribution report. */
-        rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
-        if (rc != 0)
-            goto EXIT;
+        if (uiMask & MASK_REPORT_SECTION_ENTROPY) {
+            rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
+            if (rc != 0)
+                goto EXIT;
+        }
 
         /* Generate the full n-gram model report. */
-        rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
-        if (rc != 0)
-            goto EXIT;
+        if (uiMask & MASK_REPORT_TXT_NGRAM) {        
+            rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+            if (rc != 0)
+                goto EXIT;
+        }
 
         /* Generate the visualized n-gram model. */
-        rc = pReport->plotNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
-        if (rc != 0)
-            goto EXIT;
+        if (uiMask & MASK_REPORT_PNG_NGRAM) {
+            rc = pReport->plotNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+            if (rc != 0)
+                goto EXIT;
+        }
     } else 
         rc = -1;
 
