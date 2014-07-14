@@ -38,13 +38,14 @@ int main(int argc, char **argv) {
     
     /* Craft the structure to store command line options. */    
     static struct option Options[] = {
+        {"help"    , required_argument, 0, 'h'},
         {"input"    , required_argument, 0, 'i'},
         {"output"   , required_argument, 0, 'o'},
         {"dimension", required_argument, 0, 'd'},
         {"report"   , required_argument, 0, 'r'},
     };
     
-    cszOrder = "i:o:d:r:";
+    cszOrder = "hi:o:d:r:";
     cszInput = cszOutput = cszReportSeries = NULL;
     rc = 0;
 
@@ -165,11 +166,21 @@ EXIT:
 
 void print_usage() {
 
-    const char *cszMsg = "Usage: ngram_distribution -input path_input -output path_output -dimension num.\n"
+    const char *cszMsg = "Usage: ngram_distribution --input path_input --output path_output --dimension num --report flags.\n"
+                         "       ngram_distribution -i      path_input -o       path_output -d          num -r       flags.\n\n"
                          "       path_input : The path to the input sample.\n"
                          "       path_output: The path to the output report folder.\n"
+                         "                    (Only accpet absolute paths.)\n"
                          "       dimension  : The dimension of n-gram model.\n"
-                         "                    (Must be larger than 0 and be less than 5.)\n";   
+                         "                    (Dimension must be larger than 0 and be less than 5.)\n"
+                         "       flags      : The set of control flags for report generation.\n"
+                         "                    (flag 'e' : For text dump of entropy distribution.)\n"
+                         "                    (flag 't' : For text dump of n-gram model.)\n"
+                         "                    (flag 'i' : For visualized image of n-gram model.)\n"
+                         "                    (The 'i' flag must be after the 't' flag.)\n"
+                         "                    (e.g. : e, t, i, et, eti)\n\n"
+                         "Example: ngram_distribution --input /repo/sample/a.exe --output /repo/analysis/a --dimension 2 --report eti\n"
+                         "         ngram_distribution -i /repo/sample/a.exe -o /repo/sample/a -d 2 -r eti\n\n";
     printf("%s", cszMsg);
     return;
 }
