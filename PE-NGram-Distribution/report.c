@@ -35,6 +35,7 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
         #if defined(_WIN32)
 
         #elif defined(__linux__)
+            dir = NULL;
             state = Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
             
             /* The folder already exists and we should remove all the files residing in it. */            
@@ -63,18 +64,16 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
         #endif
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
-        goto EXIT;
     } catch(EXCEPT_IO_DIR_OPEN) {
         rc = -1;  
-        goto EXIT;  
     } catch(EXCEPT_IO_DIR_READ) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_UNLINK) {
         rc = -1;    
     } end_try;
     
-    Closedir(dir);
-
+    if (dir != NULL)
+        Closedir(dir);
 EXIT:
     return rc;
 }
@@ -222,6 +221,7 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
             Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
             rc = -1;
             goto EXIT;
+
         }
 
         memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));

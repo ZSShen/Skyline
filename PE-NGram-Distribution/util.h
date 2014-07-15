@@ -157,7 +157,6 @@ void* MemAlloc(size_t, const char*, const int, const char*);
 void* MemCalloc(size_t, size_t, const char*, const int, const char*);
 void* MemRealloc(void*, size_t, const char*, const int, const char*);
 void MemFree(void*);
-void MemCopy(void*, const void*, size_t, size_t);
 
 
 /* Wrapper for file manipulation utilities. */

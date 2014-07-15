@@ -79,9 +79,9 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
         while ((idxFront > 0) && (cszSamplePath[idxFront - 1] != OS_PATH_SEPARATOR))
             idxFront--;
 
-        self->szSampleName = (char*)Calloc((idxTail - idxFront + 1), sizeof(char));        
-        MemCopy(self->szSampleName, cszSamplePath + idxFront, (idxTail - idxFront), sizeof(char));
-
+        self->szSampleName = (char*)Calloc((idxTail - idxFront + 1), sizeof(char));
+        memset(self->szSampleName, 0, sizeof(char) * (idxTail - idxFront + 1));
+        strncpy(self->szSampleName, cszSamplePath + idxFront, idxTail - idxFront); 
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_OPEN) {
@@ -192,7 +192,7 @@ int PEInfoParseHeaders(PEInfo *self) {
             memset(self->arrSectionInfo[i]->uszOriginalName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);
             memset(self->arrSectionInfo[i]->uszNormalizedName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);            
         
-            MemCopy(self->arrSectionInfo[i]->uszOriginalName, buf, SECTION_HEADER_SECTION_NAME_SIZE, sizeof(uchar));            
+            memcpy(self->arrSectionInfo[i]->uszOriginalName, buf, sizeof(uchar) * SECTION_HEADER_SECTION_NAME_SIZE);
             uszOriginalName = self->arrSectionInfo[i]->uszOriginalName;
             for (j = 0 ; j < SECTION_HEADER_SECTION_NAME_SIZE ; j++) {
                 if((uszOriginalName[j] >= 32) && (uszOriginalName[j] <= 126))
