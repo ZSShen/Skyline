@@ -76,7 +76,7 @@ void RCDeinit(RegionCollector *self) {
 
 
 /**
- * RCSelectFeatures() Select the features for n-gram model generation based on the specified method.
+ * RCSelectFeatures() Select the features for n-gram model generation with the specified method.
  */
 int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEInfo) {
     int rc;
