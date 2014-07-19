@@ -1,4 +1,6 @@
 
+PATH_ROOT = 
+
 region: region.h
 	gcc -c $(NAME)
 
