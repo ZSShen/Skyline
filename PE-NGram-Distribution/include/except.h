@@ -23,6 +23,8 @@
 /* Memory related errors. */
 #define EXCEPT_MEM              (EXCEPT_NO - 20)
 #define EXCEPT_MEM_ALLOC        (EXCEPT_MEM - 1)
+#define EXCEPT_DL_LOAD          (EXCEPT_MEM - 2)
+#define EXCEPT_DL_GET_SYMBOL    (EXCEPT_MEM - 3)
 
 /* Process related errors. */
 #define EXCEPT_PROC             (EXCEPT_NO - 30)
@@ -54,8 +56,10 @@
     #define throw(ExceptNum)    { WriteLog(cszPathSrc, iLineNo, cszFunc, "Error Code: %d\n", GetLastError()); \
                                   longjmp(bufExcept, ExceptNum); }
 #elif defined(__linux__)
-    #define throw(ExceptNum)    { WriteLog(cszPathSrc, iLineNo, cszFunc, "Message: %s\n", strerror(errno)); \
-                                  longjmp(bufExcept, ExceptNum); }
+    #define throw(ExceptNum)        { WriteLog(cszPathSrc, iLineNo, cszFunc, "Message: %s\n", strerror(errno)); \
+                                      longjmp(bufExcept, ExceptNum); }
+    #define m_throw(ExceptNum, Msg) { WriteLog(cszPathSrc, iLineNo, cszFunc, "Message: %s\n", Msg); \
+                                      longjmp(bufExcept, ExceptNum); }
 #endif
 
 

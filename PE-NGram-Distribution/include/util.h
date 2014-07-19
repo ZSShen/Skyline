@@ -9,6 +9,7 @@
     #include <unistd.h>
     #include <sys/stat.h>
     #include <dirent.h>
+    #include <dlfcn.h>
 #endif
 
 #include <stdio.h>
@@ -54,11 +55,14 @@ typedef unsigned long   ulong;
 #if defined(_WIN32)
 
 #elif defined(__linux__)
-    #define Unlink(p0)              FileUnlink(p0,            __FILE__, __LINE__, __FUNCTION__)
-    #define Mkdir(p0, p1)           DirMake  (p0, p1,         __FILE__, __LINE__, __FUNCTION__)
-    #define Opendir(p0)             DirOpen  (p0,             __FILE__, __LINE__, __FUNCTION__)
-    #define Readdir(p0)             DirRead  (p0,             __FILE__, __LINE__, __FUNCTION__)
-    #define Closedir(p0)            DirClose (p0,             __FILE__, __LINE__, __FUNCTION__)
+    #define Unlink(p0)              FileUnlink (p0,           __FILE__, __LINE__, __FUNCTION__)
+    #define Mkdir(p0, p1)           DirMake    (p0, p1,       __FILE__, __LINE__, __FUNCTION__)
+    #define Opendir(p0)             DirOpen    (p0,           __FILE__, __LINE__, __FUNCTION__)
+    #define Readdir(p0)             DirRead    (p0,           __FILE__, __LINE__, __FUNCTION__)
+    #define Closedir(p0)            DirClose   (p0,           __FILE__, __LINE__, __FUNCTION__)
+    #define Dlopen(p0, p1)          DLLoad     (p0, p1,       __FILE__, __LINE__, __FUNCTION__)
+    #define Dlsym(p0, p1)           DLGetSymbol(p0, p1,       __FILE__, __LINE__, __FUNCTION__)
+    #define Dlclose(p0)             DLFree     (p0,           __FILE__, __LINE__, __FUNCTION__)
 #endif
 
 
@@ -126,9 +130,31 @@ typedef unsigned long   ulong;
 /* The paths of plotting utility. */
 #define PATH_GNUPLOT_LINUX                   "/usr/bin/gnuplot"
 
-/* Criterions for image-based report. */
+/* The criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (1920)
 #define REPORT_IMAGE_SIZE_HEIGHT            (1080)
+
+/* The command line optrions. */
+#define OPT_LONG_HELP                       "help"
+#define OPT_LONG_INPUT                      "input"
+#define OPT_LONG_OUTPUT                     "output"
+#define OPT_LONG_DIMENSION                  "dimension"
+#define OPT_LONG_REPORT                     "report"
+#define OPT_LONG_REGION                     "region"
+#define OPT_LONG_MODEL                      "model"
+#define OPT_HELP                            'h'
+#define OPT_INPUT                           'i'
+#define OPT_OUTPUT                          'o'
+#define OPT_DIMENSION                       'd'
+#define OPT_REPORT                          't'
+#define OPT_REGION                          'r'
+#define OPT_MODEL                           'm'
+
+/* The names of default plugins. */
+#define LIB_DEFAULT_MAX_ENTROPY_SEC         "Region_MaxEntropySection"
+#define LIB_DEFAULT_DESC_FREQ               "Model_DescendingFrequency"
+#define PLUGIN_ENTRY_POINT                  "run"
+
 
 /* Path separator. */
 #if defined(_WIN32)
@@ -187,5 +213,14 @@ int FileClose(FILE*);
     int ProcClose(FILE*, const char*, const int, const char*);
 #endif
 
+
+/* Wrapper for loading dynamic shared objects. */
+#if defined(_WIN32)
+
+#elif defined(__linux__)
+    void* DLLoad(const char*, int, const char*, const int, const char*);  
+    void* DLGetSymbol(void*, const char*, const char*, const int, const char*);
+    void* DLFree(void*, const char*, const int, const char*);
+#endif
 
 #endif

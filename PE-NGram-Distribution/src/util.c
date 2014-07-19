@@ -278,4 +278,44 @@ int ProcClose(FILE *fptr, const char *cszPathSrc, const int iLineNo, const char 
     return 0;
 }
 
+/**
+ * DLLoad(): Wrapper function of dlopen().
+ */
+void* DLLoad(const char *cszLibName, int mode, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    void *hdle;
+    
+    hdle = dlopen(cszLibName, mode);
+    if (hdle == NULL)
+        m_throw(EXCEPT_DL_LOAD, dlerror());
+
+    return hdle;
+}  
+
+
+/**
+ * DLGetSymbol(): Wrapper function of dlsym().
+ */
+void* DLGetSymbol(void *hdleLib, const char *cszSymbol, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+    void *hdleSym;
+
+    hdleSym = dlsym(hdleLib, cszSymbol);
+    if (hdleSym == NULL)
+        m_throw(EXCEPT_DL_GET_SYMBOL, dlerror());
+
+    return hdleSym;
+}
+
+
+/**
+ * DLFree(): Wrapper function of dlclose().
+ */
+void* DLFree(void *hdle, const char *cszPathSrc, const int iLineNo, const char *cszFunc) {
+
+    if (hdle != NULL)
+        dlclose(hdle);
+
+    return;
+}
+
+
 #endif

@@ -29,6 +29,10 @@ typedef struct _RegionCollector {
 } RegionCollector;
 
 
+/* The function pointer type of the plugin entry point. */
+typedef int(*FUNC_PTR_REGION) (RegionCollector*, PEInfo*);
+
+
 /* Wrapper for RegionCollector initialization. */
 #define RegionCollector_init(p)     try { \
                                         p = (RegionCollector*)Malloc(sizeof(RegionCollector)); \

@@ -14,11 +14,11 @@ int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput);
 
 
 /* Bundle operations to manipulate RegionCollector structure and select the user-specified features. */
-int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo);
+int select_features(RegionCollector **ppRegionCollector, const char *cszLibName, PEInfo *pPEInfo);
 
 
 /* Bundle operations to manipulate NGram structure and generate the user-specified model. */
-int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension, 
+int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension, 
                     PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
@@ -26,46 +26,59 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
 int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask);
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv, char **envp) {
     int             opt, rc, idxOpt, i, iLen;
     uint            uiMask;
     uchar           ucDimension;
-    const char      *cszInput, *cszOutput, *cszReportSeries, *cszOrder;
+    const char      *cszInput, *cszOutput, *cszReportSeries, *cszLibRegion, *cszLibModel;
     PEInfo          *pPEInfo;
     RegionCollector *pRegionCollector;
     NGram           *pNGram;
     Report          *pReport;
+    char            szOrder[BUF_SIZE_SMALL];
     
     /* Craft the structure to store command line options. */    
     static struct option Options[] = {
-        {"help"    , required_argument, 0, 'h'},
-        {"input"    , required_argument, 0, 'i'},
-        {"output"   , required_argument, 0, 'o'},
-        {"dimension", required_argument, 0, 'd'},
-        {"report"   , required_argument, 0, 'r'},
+        {OPT_LONG_HELP     , required_argument, 0, OPT_HELP     },
+        {OPT_LONG_INPUT    , required_argument, 0, OPT_INPUT    },
+        {OPT_LONG_OUTPUT   , required_argument, 0, OPT_OUTPUT   },
+        {OPT_LONG_DIMENSION, required_argument, 0, OPT_DIMENSION},
+        {OPT_LONG_REPORT   , required_argument, 0, OPT_REPORT   },
+        {OPT_LONG_REGION   , required_argument, 0, OPT_REGION   },
+        {OPT_LONG_MODEL    , required_argument, 0, OPT_MODEL    },
     };
-    
-    cszOrder = "hi:o:d:r:";
-    cszInput = cszOutput = cszReportSeries = NULL;
+
+    memset(szOrder, 0, sizeof(char) * BUF_SIZE_SMALL);
+    sprintf(szOrder, "%c%c:%c:%c:%c:%c:%c:", OPT_HELP, OPT_INPUT, OPT_OUTPUT, OPT_DIMENSION, 
+                                             OPT_REPORT, OPT_REGION, OPT_MODEL);    
+    cszInput = cszOutput = cszReportSeries = cszLibRegion = cszLibModel = NULL;
     rc = 0;
 
     /* Get the command line options. */
     idxOpt = 0;
-    while ((opt = getopt_long(argc, argv, cszOrder, Options, &idxOpt)) != -1) {
+    while ((opt = getopt_long(argc, argv, szOrder, Options, &idxOpt)) != -1) {
         switch (opt) {
-            case 'i': {
+            case OPT_INPUT: {
                 cszInput = optarg;
                 break;
             }
-            case 'o': {
+            case OPT_OUTPUT: {
                 cszOutput = optarg;
                 break;
             }
-            case 'r': {
+            case OPT_REPORT: {
                 cszReportSeries = optarg;
                 break;
             }
-            case 'd': {
+            case OPT_REGION: {
+                cszLibRegion = optarg;
+                break;
+            }
+            case OPT_MODEL: {
+                cszLibModel = optarg;
+                break;
+            }
+            case OPT_DIMENSION: {
                 ucDimension = atoi(optarg);
                 break;
             }
@@ -132,12 +145,12 @@ int main(int argc, char **argv) {
         goto FREE_PE;
 
     /* Select the features for n-gram model generation. */
-    rc = select_features(&pRegionCollector, NULL, pPEInfo);
+    rc = select_features(&pRegionCollector, cszLibRegion, pPEInfo);
     if (rc != 0)
         goto FREE_RC;
 
     /* Generate the model with the selected features. */
-    rc = generate_model(&pNGram, NULL, ucDimension, pPEInfo, pRegionCollector);
+    rc = generate_model(&pNGram, cszLibModel, ucDimension, pPEInfo, pRegionCollector);
     if (rc != 0)
         goto FREE_NG;
 
@@ -167,20 +180,20 @@ EXIT:
 void print_usage() {
 
     const char *cszMsg = "Usage: ngram_distribution --input path_input --output path_output --dimension num --report flags.\n"
-                         "       ngram_distribution -i      path_input -o       path_output -d          num -r       flags.\n\n"
+                         "       ngram_distribution -i      path_input -o       path_output -d          num -t       flags.\n\n"
                          "       path_input : The path to the input sample.\n"
                          "       path_output: The path to the output report folder.\n"
                          "                    (Only accpet absolute paths.)\n"
                          "       dimension  : The dimension of n-gram model.\n"
                          "                    (Dimension must be larger than 0 and be less than 5.)\n"
-                         "       flags      : The set of control flags for report generation.\n"
+                         "       flags      : The set of control flags for report types.\n"
                          "                    (flag 'e' : For text dump of entropy distribution.)\n"
                          "                    (flag 't' : For text dump of n-gram model.)\n"
                          "                    (flag 'i' : For visualized image of n-gram model.)\n"
                          "                    (The 'i' flag must be after the 't' flag.)\n"
                          "                    (e.g. : e, t, i, et, eti)\n\n"
                          "Example: ngram_distribution --input /repo/sample/a.exe --output /repo/analysis/a --dimension 2 --report eti\n"
-                         "         ngram_distribution -i /repo/sample/a.exe -o /repo/sample/a -d 2 -r eti\n\n";
+                         "         ngram_distribution -i /repo/sample/a.exe -o /repo/sample/a -d 2 -t eti\n\n";
     printf("%s", cszMsg);
     return;
 }
@@ -221,7 +234,7 @@ EXIT:
 }
 
 
-int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, PEInfo *pPEInfo) {
+int select_features(RegionCollector **ppRegionCollector, const char *cszLibName, PEInfo *pPEInfo) {
     int     rc;
     RegionCollector *pRegionCollector;
 
@@ -233,7 +246,7 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
         pRegionCollector = *ppRegionCollector;
 
         /* Select the features. */
-        rc = pRegionCollector->selectFeatures(pRegionCollector, cszMethod, pPEInfo);
+        rc = pRegionCollector->selectFeatures(pRegionCollector, cszLibName, pPEInfo);
     } else
         rc = -1;
 
@@ -241,7 +254,7 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszMethod, 
 }
 
 
-int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension, 
+int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension, 
                     PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int     rc;
     NGram   *pNGram;
@@ -258,7 +271,7 @@ int generate_model(NGram **ppNGram, const char *cszMethod, uchar ucDimension,
         pNGram->setDimension(pNGram, ucDimension);
 
         /* Generate the model. */
-        rc = pNGram->generateModel(pNGram, cszMethod, pPEInfo, pRegionCollector);
+        rc = pNGram->generateModel(pNGram, cszLibName, pPEInfo, pRegionCollector);
     } else
         rc = -1;
 

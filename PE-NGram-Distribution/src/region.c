@@ -78,15 +78,41 @@ void RCDeinit(RegionCollector *self) {
 /**
  * RCSelectFeatures() Select the features for n-gram model generation with the specified method.
  */
-int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEInfo) {
-    int rc;
+int RCSelectFeatures(RegionCollector *self, const char *cszLibName, PEInfo *pPEInfo) {
+    int     rc;
+    void    *hdleLib;
+    char    szLib[BUF_SIZE_SMALL];
+    FUNC_PTR_REGION funcEntry;
     
-    /* The default method is _FuncEntirePlanInMaxSec(). */
-    if (cszMethod == NULL)
-        rc = _FuncEntirePlanInMaxSec(self, pPEInfo);
+    try {
+        rc = 0;
 
+        /* The default library is "libRegion_MaxEntropySection.so" . */
+        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);        
+        if (cszLibName == NULL) 
+            sprintf(szLib, "lib%s.so", LIB_DEFAULT_MAX_ENTROPY_SEC);
+        else
+            sprintf(szLib, "lib%s.so", cszLibName);
 
-    return 0;
+        /* Load the plugin. */
+        hdleLib = NULL;
+        hdleLib = Dlopen(szLib, RTLD_LAZY);
+
+        /* Get the plugin entry point. */
+        funcEntry = NULL;
+        funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_POINT);
+        funcEntry(self, pPEInfo);
+
+    } catch(EXCEPT_DL_LOAD) {
+        rc = -1;
+    } catch(EXCEPT_DL_GET_SYMBOL) {
+        rc = -1;
+    } end_try;
+
+    if (hdleLib != NULL)
+        Dlclose(hdleLib);
+
+    return rc;
 }
 
 
