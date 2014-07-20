@@ -25,11 +25,7 @@
  *                            < 0: Exception occurs while memory allocation.                              
  */
 int run(RegionCollector *pRegionCollector, PEInfo *pPEInfo) {
-    int         rc, i;
-    ushort      usNumRegions, usIdxSection;
-    double      dMax;
-    SectionInfo *pSection;
-    Region      *pRegion;
+    int rc;
  
     rc = 0;
 
