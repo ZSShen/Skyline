@@ -1,25 +1,9 @@
 #include "region.h"
 
-/*===========================================================================*
- *                  Definition for internal functions                        *
- *===========================================================================*/
-/**
- * This function selects the binary regions which have the entropy values higher than the threshold
- * from the section with maximum average entropy.
- *
- * @param   self        The pointer to the RegionCollector structure.
- * @param   pPEInfo     The pointer to the to be analyzed PEInfo structure.
- *
- * @return              0: The binary regions are collected successfully.
- *                    < 0: Exception occurs while memory allocation.
- */
-int _FuncPlateausInMaxSec(RegionCollector *self, PEInfo *pPEInfo);
-
 
 /*===========================================================================*
  *                Implementation for exported functions                      *
  *===========================================================================*/
-
 void RCInit(RegionCollector *self) {
 
     /* Initialize member variables. */
@@ -88,8 +72,9 @@ int RCSelectFeatures(RegionCollector *self, const char *cszLibName, PEInfo *pPEI
         /* Get the plugin entry point. */
         funcEntry = NULL;
         funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_POINT);
-        funcEntry(self, pPEInfo);
 
+        /* Run the plugin. */
+        rc = funcEntry(self, pPEInfo);
     } catch(EXCEPT_DL_LOAD) {
         rc = -1;
     } catch(EXCEPT_DL_GET_SYMBOL) {

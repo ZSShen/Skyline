@@ -6,6 +6,7 @@
 #include "pe_info.h"
 #include "region.h"
 
+
 /* Structure to record the value and the appearance frequency of a specific n-gram token. */
 typedef struct _Token {
     ulong ulValue, ulFrequency;

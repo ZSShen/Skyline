@@ -119,8 +119,9 @@ int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, Reg
         /* Get the plugin entry point. */
         funcEntry = NULL;
         funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_POINT);
-        funcEntry(self, _ulMaxValue);
 
+        /* Run the plugin. */        
+        rc = funcEntry(self, _ulMaxValue);
     } catch(EXCEPT_DL_LOAD) {
         rc = -1;
     } catch(EXCEPT_DL_GET_SYMBOL) {
@@ -131,8 +132,6 @@ int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, Reg
         Dlclose(hdleLib);
 
     return rc; 
-
-    return 0;
 }
 
 
