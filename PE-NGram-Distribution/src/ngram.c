@@ -12,7 +12,6 @@ ulong _ulMaxValue;
 /*===========================================================================*
  *                  Definition for internal functions                        *
  *===========================================================================*/
-
 /**
  * This function collects the n-gram tokens from the specified binary regions.
  *
@@ -26,36 +25,9 @@ ulong _ulMaxValue;
 int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
-/**
- * This function generates the model by sorting the appearance frequencies of n-gram tokens
- * with descending order.
- *
- * @param   self                The pointer to the NGram structure.
- *
- * @return                      0: The model is generated successfully.
- *                            < 0: Exception occurs while memory allocation.
- */
-int _FuncTokenFreqDescOrder(NGram *self);
-
-
-/**
- * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency
- * in descending order.
- *
- * @param   ppSrc        The pointer to the pointer indexing to the source token.
- * @param   ppDst        The pointer to the pointer indexing to the target token.
- *
- * @return             < 0: The source token must go before the target one.
- *                       0: The source and target tokens do not need to change their order.
- *                     > 0: The source token must go after the target one. 
- */
-int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge);
-
-
 /*===========================================================================*
  *                Implementation for exported functions                      *
  *===========================================================================*/
-
 void NGramInit(NGram *self) {
 
     /* Initialize member variables. */
@@ -120,15 +92,46 @@ void NGramSetDimension(NGram *self, uchar ucDimension) {
 /**
  * NGramGenerateModel(): Generate the n-gram model based on the specified method.
  */
-int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+    int     rc;
+    void    *hdleLib;
+    char    szLib[BUF_SIZE_SMALL];
+    FUNC_PTR_MODEL funcEntry;
 
     /* First, collect tokens from the specified binary regions. */
     _NGramCollectTokens(self, pPEInfo, pRegionCollector);
 
-    /* Second, generate model by different methods. */
-    if (cszMethod == NULL)
-        _FuncTokenFreqDescOrder(self);
-    
+    /* Second, generate model using the specified method. */
+    try {
+        rc = 0;
+
+        /* The default library is "libModel_DescendingFrequency.so" . */
+        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);        
+        if (cszLibName == NULL) 
+            sprintf(szLib, "lib%s.so", LIB_DEFAULT_DESC_FREQ);
+        else
+            sprintf(szLib, "lib%s.so", cszLibName);
+
+        /* Load the plugin. */
+        hdleLib = NULL;
+        hdleLib = Dlopen(szLib, RTLD_LAZY);
+
+        /* Get the plugin entry point. */
+        funcEntry = NULL;
+        funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_POINT);
+        funcEntry(self, _ulMaxValue);
+
+    } catch(EXCEPT_DL_LOAD) {
+        rc = -1;
+    } catch(EXCEPT_DL_GET_SYMBOL) {
+        rc = -1;
+    } end_try;
+
+    if (hdleLib != NULL)
+        Dlclose(hdleLib);
+
+    return rc; 
+
     return 0;
 }
 
@@ -154,7 +157,6 @@ void NGramDump(NGram *self) {
 /*===========================================================================*
  *                Implementation for internal functions                      *
  *===========================================================================*/
-
 /**
  * _NGramCollectTokens(): Collect the n-gram tokens from the specified binary regions.
  */
@@ -301,92 +303,4 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
 
 EXIT:    
     return rc;       
-}
-
-
-/**
- * _FuncTokenFreqDescOrder(): Generate the model by sorting the appearance frequencies of n-gram tokens
- * with descending order.
- */
-int _FuncTokenFreqDescOrder(NGram *self) {
-    int     rc, i, j;
-    double  dScore;
-    Token   *pToken, *pDenominator, *pNumerator;
-
-    rc = 0;
-    try {
-        /* Sort the tokens. */
-        qsort(self->arrToken, _ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
-
-        /* Adjust the size of arrToken to eliminate NULL elements. */
-        self->arrToken = Realloc(self->arrToken, sizeof(Token*) * self->ulNumTokens);
-
-        /* Ignore the dummy tokens: (ff)+ and (00)+. */
-        self->ulNumSlices = self->ulNumTokens - 2;
-        self->arrSlice = (Slice**)Calloc(self->ulNumSlices, sizeof(Slice*));
-        for (i = 0 ; i < self->ulNumSlices ; i++)
-            self->arrSlice[i] = NULL; 
-    
-        /* Choose the most frequently appearing token as the denominator. */
-        for (i = 0 ; i < self->ulNumTokens ; i++) {
-            pToken = self->arrToken[i];
-            if ((pToken->ulValue != 0) && (pToken->ulValue != (_ulMaxValue - 1))) {
-                pDenominator  = pToken;
-                break;
-            }
-        }
-
-        /* Collect the slices. */
-        for (i = 0, j = 0; i < self->ulNumTokens ; i++) {
-            pToken = self->arrToken[i];
-            if ((pToken->ulValue != 0) && (pToken->ulValue != (_ulMaxValue - 1))) {
-                pNumerator = pToken;
-                
-                self->arrSlice[j] = (Slice*)Malloc(sizeof(Slice));
-                self->arrSlice[j]->pDenominator = pDenominator;
-                self->arrSlice[j]->pNumerator = pNumerator;
-
-                dScore = (double)pNumerator->ulFrequency / (double)pDenominator->ulFrequency;
-                self->arrSlice[j]->dScore = dScore;                
-
-                j++;
-            }
-        }
-    } catch(EXCEPT_MEM_ALLOC) {
-        rc = -1;
-    } end_try;
-    
-    return rc;
-}
-
-
-/**
- * _CompTokenFreqDescOrder(): Hint the qsort() library to sort the n-gram tokens by their appearance frequency
- * in descending order.
- */
-int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
-    Token *pSrc, *pTge;
-
-    pSrc = *(Token**)ppSrc;
-    pTge = *(Token**)ppTge;
-
-    if (pSrc == NULL) {
-        if (pTge == NULL)
-            return 0;
-        else
-            return 1;
-    } else {
-        if (pTge == NULL)
-            return -1;
-        else {
-            if (pSrc->ulFrequency == pTge->ulFrequency)
-                return 0;
-            else {
-                if (pSrc->ulFrequency < pTge->ulFrequency)
-                    return 1;
-                else
-                    return -1;
-            }
-        }
-    }
 }

@@ -31,6 +31,10 @@ typedef struct _NGram {
 } NGram;
 
 
+/* The function pointer type of the plugin entry point. */
+typedef int (*FUNC_PTR_MODEL)(NGram*, ulong);
+
+
 /* Wrapper for NGram initialization. */
 #define NGram_init(p)       try { \
                                 p = (NGram*)Malloc(sizeof(NGram)); \
@@ -85,16 +89,5 @@ int NGramGenerateModel(NGram *self, const char *cszMethod, PEInfo *pPEInfo, Regi
  * @param   self            The pointer to the NGram structure.
  */
 void NGramDump(NGram *self);
-
-/*===========================================================================*
- *                 Supported Model Generation Methods                        *
- *===========================================================================*/
-/*
- *
- *
- *
- *
- *
- */ 
 
 #endif

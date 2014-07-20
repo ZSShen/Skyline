@@ -10,6 +10,48 @@
 
 
 /*===========================================================================*
+ *                Implementation for internal functions                      *
+ *===========================================================================*/
+/**
+ * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency
+ * in descending order.
+ *
+ * @param   ppSrc        The pointer to the pointer indexing to the source token.
+ * @param   ppDst        The pointer to the pointer indexing to the target token.
+ *
+ * @return             < 0: The source token must go before the target one.
+ *                       0: The source and target tokens do not need to change their order.
+ *                     > 0: The source token must go after the target one. 
+ */
+int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
+    Token *pSrc, *pTge;
+
+    pSrc = *(Token**)ppSrc;
+    pTge = *(Token**)ppTge;
+
+    if (pSrc == NULL) {
+        if (pTge == NULL)
+            return 0;
+        else
+            return 1;
+    } else {
+        if (pTge == NULL)
+            return -1;
+        else {
+            if (pSrc->ulFrequency == pTge->ulFrequency)
+                return 0;
+            else {
+                if (pSrc->ulFrequency < pTge->ulFrequency)
+                    return 1;
+                else
+                    return -1;
+            }
+        }
+    }
+}
+
+
+/*===========================================================================*
  *                Implementation for exported functions                      *
  *===========================================================================*/
 /**
@@ -74,46 +116,3 @@ int run(NGram *pNGram, ulong ulMaxValue) {
     
     return rc;
 }
-
-
-/*===========================================================================*
- *                Implementation for internal functions                      *
- *===========================================================================*/
-/**
- * This function hints the qsort() library to sort the n-gram tokens by their appearance frequency
- * in descending order.
- *
- * @param   ppSrc        The pointer to the pointer indexing to the source token.
- * @param   ppDst        The pointer to the pointer indexing to the target token.
- *
- * @return             < 0: The source token must go before the target one.
- *                       0: The source and target tokens do not need to change their order.
- *                     > 0: The source token must go after the target one. 
- */
-int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
-    Token *pSrc, *pTge;
-
-    pSrc = *(Token**)ppSrc;
-    pTge = *(Token**)ppTge;
-
-    if (pSrc == NULL) {
-        if (pTge == NULL)
-            return 0;
-        else
-            return 1;
-    } else {
-        if (pTge == NULL)
-            return -1;
-        else {
-            if (pSrc->ulFrequency == pTge->ulFrequency)
-                return 0;
-            else {
-                if (pSrc->ulFrequency < pTge->ulFrequency)
-                    return 1;
-                else
-                    return -1;
-            }
-        }
-    }
-}
-

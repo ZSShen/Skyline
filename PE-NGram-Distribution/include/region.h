@@ -70,15 +70,5 @@ void RCDeinit(RegionCollector *self);
  */
 int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEInfo);
 
-/*===========================================================================*
- *                 Supported Feature Selection Methods                       *
- *===========================================================================*/
-/*
- *
- *
- *
- *
- *
- */ 
 
 #endif
