@@ -146,7 +146,7 @@ void NGramDump(NGram *self) {
     for (i = 0 ; i < self->ulNumTokens ; i++) {
         pToken = self->arrToken[i];
         if (pToken != NULL)
-            printf("%d\t%04x\t%lu\n", i, pToken->ulValue, pToken->ulFrequency);
+            printf("%d\t%04lx\t%lu\n", i, pToken->ulValue, pToken->ulFrequency);
     }
 
     return;

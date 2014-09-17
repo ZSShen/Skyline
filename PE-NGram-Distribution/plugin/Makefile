@@ -12,6 +12,9 @@ PATH_FILE_NGRAM = $(PATH_ROOT)/obj/ngram.o
 
 CC = gcc
 
+DUMMY_OBJ_FOLDER := $(shell mkdir -p $(PATH_OBJ))
+DUMMY_LIB_FOLDER := $(shell mkdir -p $(PATH_LIB))
+
 region: $(PATH_INC)
 	$(CC) -c -I$(PATH_INC) $(PATH_SRC)$(NAME).c -o $(PATH_OBJ)$@.o
 	$(CC) $(PATH_FILE_EXCEPT) $(PATH_FILE_UTIL) $(PATH_FILE_PE) $(PATH_OBJ)$@.o -fPIC -shared -o $(PATH_LIB)lib$(NAME).so	

@@ -171,7 +171,9 @@ int PEInfoParseHeaders(PEInfo *self) {
         /* Create the array to store the SectionInfo structure for each section. */
         ulWord = self->pPEHeader->usNumSections;
         self->arrSectionInfo = (SectionInfo**)Calloc(ulWord, sizeof(SectionInfo*));
-        memset(self->arrSectionInfo, (uint)NULL, sizeof(SectionInfo*) * ulWord);
+        for (i = 0 ; i < ulWord ; i++) {
+            (self->arrSectionInfo)[i] = NULL;
+        }
         
         /* Traverse the section headers to collect the information from each section. */
         for (i = 0 ; i < ulWord ; i++) {

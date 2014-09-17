@@ -1,5 +1,5 @@
 
-# Define the constants.
+# Define the constants for folders and files.
 PATH_CUR := $(shell pwd)
 PATH_SRC := $(PATH_CUR)/src/
 PATH_INC := $(PATH_CUR)/include/
@@ -7,17 +7,8 @@ PATH_OBJ := $(PATH_CUR)/obj/
 PATH_LIB := $(PATH_CUR)/plugin/lib/
 PATH_OUT_DBG := $(PATH_CUR)/debug/
 PATH_OUT_REL := $(PATH_CUR)/release/
-
-LD_LIBRARY_PATH := $(PATH_LIB)
-export LD_LIBRARY_PATH
-
-CC := gcc
-LIBS := -ldl -lm
-
 NAME_EXE := pe_ngram
 NAME_LIB := lib$(NAME_EXE)
-
-VPATH := $(PATH_INC)
 
 
 # Create the relevant folders to store objective and executable files.
@@ -27,8 +18,14 @@ FOLDER_OUT_DBG := $(shell mkdir -p $(PATH_OUT_DBG))
 FOLDER_OUT_REL := $(shell mkdir -p $(PATH_OUT_REL))
 
 
+# Specify the compilation options.
+CC := gcc
+LIBS := -ldl -lm
+
+
 # List the dependencies for project building.
 DEPENDENCY := except util pe_info region ngram report
+VPATH := $(PATH_INC)
 
 
 # List the project building rules.
