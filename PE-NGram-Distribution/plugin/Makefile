@@ -1,24 +1,54 @@
-PATH_CUR = $(shell pwd)
-PATH_ROOT = $(PATH_CUR)/..
-PATH_INC = $(PATH_ROOT)/include/
-PATH_SRC = $(PATH_CUR)/src/
-PATH_OBJ = $(PATH_CUR)/obj/
-PATH_LIB = $(PATH_CUR)/lib/
 
-PATH_FILE_EXCEPT = $(PATH_ROOT)/obj/except.o
-PATH_FILE_UTIL = $(PATH_ROOT)/obj/util.o
-PATH_FILE_PE = $(PATH_ROOT)/obj/pe_info.o
-PATH_FILE_NGRAM = $(PATH_ROOT)/obj/ngram.o
+# Define the constants for folders and files.
+PATH_CUR := $(shell pwd)
+PATH_PRJ := $(PATH_CUR)/..
+PATH_INC := $(PATH_PRJ)/include/
+PATH_OBJ := $(PATH_PRJ)/obj/
+PATH_PLG_SRC := $(PATH_CUR)/src/
+PATH_PLG_OBJ := $(PATH_CUR)/obj/
+PATH_PLG_LIB := $(PATH_CUR)/lib/
 
+PATH_OBJ_EXCEPT := $(PATH_OBJ)except.o
+PATH_OBJ_UTIL   := $(PATH_OBJ)util.o
+PATH_OBJ_PE     := $(PATH_OBJ)pe_info.o
+PATH_OBJ_NGRAM  := $(PATH_OBJ)ngram.o
+
+
+# Define the default plugins.
+REGION := Region_MaxEntropySection
+MODEL  := Model_DescendingFrequency
+PATH_REGION := $(PATH_PLG_SRC)$(REGION)
+PATH_MODEL  := $(PATH_PLG_SRC)$(MODEL)
+
+
+# Create the relevant folders to store objective and executable files.
+FOLDER_OBJ := $(shell mkdir -p $(PATH_PLG_OBJ))
+FOLDER_LIB := $(shell mkdir -p $(PATH_PLG_LIB))
+
+
+# Specify the compilation options
 CC = gcc
+FLAG = -fPIC
 
-DUMMY_OBJ_FOLDER := $(shell mkdir -p $(PATH_OBJ))
-DUMMY_LIB_FOLDER := $(shell mkdir -p $(PATH_LIB))
 
-region: $(PATH_INC)
-	$(CC) -c -I$(PATH_INC) $(PATH_SRC)$(NAME).c -o $(PATH_OBJ)$@.o
-	$(CC) $(PATH_FILE_EXCEPT) $(PATH_FILE_UTIL) $(PATH_FILE_PE) $(PATH_OBJ)$@.o -fPIC -shared -o $(PATH_LIB)lib$(NAME).so	
+# List the dependencies for project building.
+VPATH := $(PATH_INC)
 
-model: $(PATH_INC)
-	$(CC) -c -I$(PATH_INC) $(PATH_SRC)$(NAME).c -o $(PATH_OBJ)$@.o
-	$(CC) $(PATH_FILE_EXCEPT) $(PATH_FILE_UTIL) $(PATH_FILE_NGRAM) $(PATH_OBJ)$@.o -fPIC -shared -o $(PATH_LIB)lib$(NAME).so
+
+# List the project building rules.
+dynamic: clean dynamic_region dynamic_model  
+
+dynamic_region:
+	$(CC) $(FLAG) -I$(PATH_INC) -c $(PATH_REGION).c -o $(PATH_OBJ)$@.o	
+	$(CC) $(FLAG) -shared $(PATH_OBJ_EXCEPT) $(PATH_OBJ_UTIL) $(PATH_OBJ_PE) \
+    $(PATH_OBJ)$@.o -o $(PATH_PLG_LIB)lib$(REGION).so
+
+dynamic_model:
+	$(CC) $(FLAG) -I$(PATH_INC) -c $(PATH_MODEL).c -o $(PATH_OBJ)$@.o
+	$(CC) $(FLAG) -shared $(PATH_OBJ_EXCEPT) $(PATH_OBJ_UTIL) $(PATH_OBJ_NGRAM) \
+    $(PATH_OBJ)$@.o -o $(PATH_PLG_LIB)lib$(MODEL).so
+
+
+# List the project cleaning rule.
+clean:
+	rm -f $(PATH_PLG_OBJ)* $(PATH_PLG_LIB)*
