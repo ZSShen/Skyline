@@ -29,11 +29,13 @@ FOLDER_LIB := $(shell mkdir -p $(PATH_PLG_LIB))
 # Specify the compilation options
 CC = gcc
 FLAG = -fPIC
+ifeq ($(DEBUG), true)
+	FLAG := $(FLAG) -g
+endif
 
 
 # List the dependencies for project building.
 VPATH := $(PATH_INC)
-
 
 # List the project building rules.
 dynamic: clean dynamic_region dynamic_model  

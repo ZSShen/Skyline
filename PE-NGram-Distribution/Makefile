@@ -11,6 +11,11 @@ PATH_OUT_DBG := $(PATH_CUR)/debug/
 PATH_OUT_REL := $(PATH_CUR)/release/
 NAME_EXE := pe_ngram
 NAME_LIB := lib$(NAME_EXE)
+ifeq ($(DEBUG), true)
+	PATH_OUT := $(PATH_OUT_DBG)$(NAME_EXE)
+else
+	PATH_OUT := $(PATH_OUT_REL)$(NAME_EXE)
+endif
 
 
 # Create the relevant folders to store objective and executable files.
@@ -28,10 +33,16 @@ export LD_LIBRARY_PATH
 CC := gcc
 LIBS := -ldl -lm
 FLAG := -fPIC
+ifeq ($(DEBUG), true)
+	FLAG := $(FLAG) -g
+endif
 
 
 # Specify the command to run makefile of the plugin.
 MAKE_PLUGIN := make dynamic
+ifeq ($(DEBUG), true)
+	MAKE_PLUGIN := $(MAKE_PLUGIN) DEBUG=true
+endif
 
 
 # List the dependencies for project building.
@@ -40,14 +51,8 @@ VPATH := $(PATH_INC)
 
 
 # List the project building rules.
-release_exe: main
-	$(CC) -o $(PATH_OUT_REL)$(NAME_EXE) $(PATH_OBJ)*.o $(LIBS) \
-    && cd $(PATH_PLG) \
-    && $(MAKE_PLUGIN)
-
-debug_exe: FLAG := $(FLAG) -g
-debug_exe: main
-	$(CC) $(FLAG) -o $(PATH_OUT_DBG)$(NAME_EXE) $(PATH_OBJ)*.o $(LIBS) \
+executable: main
+	$(CC) $(FLAG) -o $(PATH_OUT) $(PATH_OBJ)*.o $(LIBS) \
     && cd $(PATH_PLG) \
     && $(MAKE_PLUGIN)
 
@@ -67,9 +72,10 @@ clean:
 
 # List the project execution rules.
 run:
-	$(PATH_OUT_REL)$(NAME_EXE) -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION) -t $(REPORT)
-
-debug_run:
+ifeq ($(DEBUG), true)
 	valgrind --leak-check=yes --track-origins=yes \
-    $(PATH_OUT_DBG)$(NAME_EXE) -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION) -t $(REPORT)
+    $(PATH_OUT) -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION) -t $(REPORT)
+else
+	$(PATH_OUT) -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION) -t $(REPORT)
+endif
 
