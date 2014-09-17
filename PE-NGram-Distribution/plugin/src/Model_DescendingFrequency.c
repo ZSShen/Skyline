@@ -65,7 +65,7 @@ int _CompTokenFreqDescOrder(const void *ppSrc, const void *ppTge) {
  * @return                      0: The model is generated successfully.
  *                            < 0: Exception occurs while memory allocation.
  */
-int run(NGram *pNGram, ulong ulMaxValue) {
+int model_run(NGram *pNGram, ulong ulMaxValue) {
     int     rc, i, j;
     double  dScore;
     Token   *pToken, *pDenominator, *pNumerator;

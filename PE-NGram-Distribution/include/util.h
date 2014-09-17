@@ -153,7 +153,8 @@ typedef unsigned long   ulong;
 /* The names of default plugins. */
 #define LIB_DEFAULT_MAX_ENTROPY_SEC         "Region_MaxEntropySection"
 #define LIB_DEFAULT_DESC_FREQ               "Model_DescendingFrequency"
-#define PLUGIN_ENTRY_POINT                  "run"
+#define PLUGIN_ENTRY_MODEL                  "model_run"
+#define PLUGIN_ENTRY_REGION                 "region_run"
 
 
 /* Path separator. */

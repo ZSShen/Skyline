@@ -23,7 +23,7 @@
  * @return                      0: The binary regions are collected successfully.
  *                            < 0: Exception occurs while memory allocation.                              
  */
-int run(RegionCollector *pRegionCollector, PEInfo *pPEInfo) {
+int region_run(RegionCollector *pRegionCollector, PEInfo *pPEInfo) {
     int         rc, i;
     ushort      usNumRegions, usIdxSection;
     double      dMax;
