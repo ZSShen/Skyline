@@ -27,11 +27,15 @@ for system integration.
         
     For the two aspects, the default selected plugins are:
         Retrieve the section with maximum average entropy.
-        Produce the frequency model with descending order.
+        Generate the frequency model with descending order.
     
     Besides, the engine can provide the graphcial report
-    to visualize the tend of distribution. For this, plase
+    to visualize the tend of distribution. For this, please
     make sure that the "gnuplot" utility is already installed.
+    
+    On the other hand, the engine can be built for normal or debug version.
+    For debug version, please make sure that the "valgrind" utility is
+    already installed to turn on the memory usage inspection.
 
 ####1.1 Source Tree
     |-- Makefile
@@ -54,9 +58,9 @@ for system integration.
         |-- Makefile
         |-- src
             |--Region_Template.c (The template for plugin.)
-            |--Region_MaxEntropySection.c
+            |--Region_MaxEntropySection.c (The default plugin.)
             |--Model_Template.c (The template for plugin.)
-            |--Model_DescendingFrequency.c
+            |--Model_DescendingFrequency.c (The default plugin.)
         |-- obj (after first build.)
         |-- lib (after first build.)
     |-- obj (after first build.)
@@ -72,8 +76,29 @@ for system integration.
     Note that both kinds of builds will also compile the default plugins.
 
 ####1.3 Builing Plugin
+    There is a second-level Makefile in the plugin folder:
+        For the plugin of binary block selection:
+            Execute `make dynamic_region REGION=[NameOfSourceFile]`.
+            e.g.: `make dynamic_region REGION=Region_MaxEntropySection`
+    
+        For the plugin fo model generation:
+            Execute `make dynamic_model MODEL=[NameOfSourceFile]`.
+            e.g.: `make dynamic_model MODEL=Model_DescendingFrequency`
 
 ###2. Binary Execution
+    The built binary is named "pe_ngram". Actually, one can execute
+    `pe_ngram -h` or `pe_ngram --help` for detail usage.
+
+    There are four arguments to be specified:
+    --input     | -i [PathInputFile]
+    --output    | -o [PathOutputFolder]
+    --dimension | -d [NgramDimension]
+    --report    | -t [TypesOfReports]
+    
+    PathInputFile   : The path to the input file. (Only accept absolute path.)
+    PathOutputFolder: The path to the output report folder. (Only accept absolute path.)
+    NgramDimension  : The dimension used to generate ngram tokens.
+    TypeOfReports   : The set of control flags for report types.
 
 ##Reference
 
