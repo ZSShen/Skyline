@@ -3,20 +3,24 @@
 
 ##Introduction
 
-A research project for Windoes PE files which tries to discover the 
-potential similarity among a file and its obfuscated instances using 
+A research project for Windoes PE which tries to discover the 
+similarity among a file and its obfuscated instances using 
 different types of packers.
 
-Specifically, it transforms a givien file into the n-gram distribution 
-model with a set of selected binary blocks. Such frequency model will 
-be the core material for similarity comparison.
+Specifically, it transforms a givien file into the distribution
+model of n-gram tokens using a set of binary blocks selected by
+heuristics. Such frequency model will be the core material for 
+similarity comparison.
 
-Currently, the project focuses on the preciseness of model generation. 
-For the applications like file clustering and classification, one can 
-fork the project as the core utility for system integration.
+Currently, this project focuses on the n-gram model generation. 
+For the applications like clustering and classification for
+similar PE files, one can fork the project as the core utility 
+for system integration.
 
 ##Usage
+####1. Source Building
 
+####2. Binary Execution
 
 ##Reference
 
