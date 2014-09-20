@@ -247,6 +247,11 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
                     arrSlice[i]->pDenominator->ulFrequency);            
             iLenBuf = strlen(buf);
             iCountBatch++;
+
+            if (arrSlice[i]->dScore < TRUNCATE_THRESHOLD) {
+                break;
+            }
+
             if (iCountBatch == BATCH_WRITE_LINE_COUNT) {
                 Fwrite(buf, sizeof(char), iLenBuf, fpReport);
                 iLenBuf = iCountBatch = 0;

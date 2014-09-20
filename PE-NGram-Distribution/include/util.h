@@ -127,6 +127,11 @@ typedef unsigned long   ulong;
 #define ABV_TOKEN_REPORT_PNG_NGRAM          'i'
 #define ABV_TOKEN_REPORT_PATTERN            'p'
 
+
+/* The trancation threshold for the frequency model. */
+#define TRUNCATE_THRESHOLD                  0.10
+
+
 /* The paths of plotting utility. */
 #define PATH_GNUPLOT_LINUX                   "/usr/bin/gnuplot"
 
