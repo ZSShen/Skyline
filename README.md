@@ -95,10 +95,21 @@ for system integration.
     --dimension | -d [NgramDimension]
     --report    | -t [TypesOfReports]
     
-    PathInputFile   : The path to the input file. (Only accept absolute path.)
-    PathOutputFolder: The path to the output report folder. (Only accept absolute path.)
-    NgramDimension  : The dimension used to generate ngram tokens.
+    PathInputFile   : The path to the input file.
+                      (Only accept absolute path.)
+    PathOutputFolder: The path to the output report folder.
+                      (Only accept absolute path.)
+    NgramDimension  : The dimension used to generate ngram tokens. 
+                      (Only accept range from 1 to 4.)
     TypeOfReports   : The set of control flags for report types.
+                      (Flag 'e': For text dump of entropy information.)
+                      (Flag 't': For text dump of n-gram distribution.)
+                      (Flag 'i': For visualized image of n-gram model.)
+                      (Note that the image is dependent on the text dump.)
+                      
+    Usage Example:
+        `pe_ngram --input /path/a.exe --output /path/a.data/ --dimension 2 --report eti`
+        `pe_ngram -i      /path/a.exe -o       /path/a.data/ -d          2 -t       eti`
 
 ##Reference
 
