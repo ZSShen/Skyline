@@ -136,8 +136,8 @@ typedef unsigned long   ulong;
 #define PATH_GNUPLOT_LINUX                   "/usr/bin/gnuplot"
 
 /* The criterions for image-based report. */
-#define REPORT_IMAGE_SIZE_WIDTH             (1920)
-#define REPORT_IMAGE_SIZE_HEIGHT            (1080)
+#define REPORT_IMAGE_SIZE_WIDTH             (640)
+#define REPORT_IMAGE_SIZE_HEIGHT            (480)
 
 /* The command line optrions. */
 #define OPT_LONG_HELP                       "help"
