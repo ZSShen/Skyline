@@ -70,8 +70,8 @@ for system integration.
     
 ####1.2 Building Entire Source
     There is a major Makefile at the top of source tree:
-        For the normal release build, execute `make`.
-        For the debug build, execute `make DEBUG=true`.
+        For the normal release build, execute `make executable`.
+        For the debug build, execute `make executable DEBUG=true`.
     
     Note that both kinds of builds will also compile the default plugins.
 
