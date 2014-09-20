@@ -86,6 +86,7 @@ for system integration.
             e.g.: `make dynamic_model MODEL=Model_DescendingFrequency`
 
 ###2. Binary Execution
+####2.1 Usage
     The built binary is named "pe_ngram". Actually, one can execute
     `pe_ngram -h` or `pe_ngram --help` for detail usage.
 
@@ -111,6 +112,13 @@ for system integration.
         `pe_ngram --input /path/a.exe --output /path/a.data/ --dimension 2 --report eti`
         `pe_ngram -i      /path/a.exe -o       /path/a.data/ -d          2 -t       eti`
 
+####2.2 Demo
+    Briefly demonstrate several images from the win32 notepad.exe and its
+    packed versions using differnt packers:
+![Notepad] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Notepad.png)
+![FSG] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Fsg_Notepad.png)
+![MEW] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Mew_Notepad.png)
+![RLPack] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_RLPack_Notepad.png)
 ##Reference
 
 The project is inspired by the research paper from G.Jacob et. al.  
