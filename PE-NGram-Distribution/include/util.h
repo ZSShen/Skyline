@@ -138,6 +138,9 @@ typedef unsigned long   ulong;
 /* The criterions for image-based report. */
 #define REPORT_IMAGE_SIZE_WIDTH             (640)
 #define REPORT_IMAGE_SIZE_HEIGHT            (480)
+#define REPORT_IMAGE_X_AXIS                 "Token Number"
+#define REPORT_IMAGE_Y_AXIS                 "Relative Frequency Ratio"
+
 
 /* The command line optrions. */
 #define OPT_LONG_HELP                       "help"

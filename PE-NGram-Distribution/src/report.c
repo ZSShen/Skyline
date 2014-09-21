@@ -388,7 +388,7 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         sprintf(buf + iLenBuf, "set title \"%s\"\n", cszSampleName);
         iLenBuf = strlen(buf);
 
-        strcpy(buf + iLenBuf, "set xlabel \"Token\"\nset ylabel \"Rate\"\n");
+        sprintf(buf + iLenBuf, "set xlabel \"%s\"\nset ylabel \"%s\"\n", REPORT_IMAGE_X_AXIS, REPORT_IMAGE_Y_AXIS);
         iLenBuf = strlen(buf);
 
         #if defined(_WIN32)
