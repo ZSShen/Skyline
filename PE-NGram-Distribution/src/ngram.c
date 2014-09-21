@@ -239,13 +239,16 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
                         }
                     }
 
-                    if (self->arrToken[ulTokenVal] == NULL) {
-                        self->arrToken[ulTokenVal] = (Token*)Malloc(sizeof(Token));
-                        self->arrToken[ulTokenVal]->ulValue = ulTokenVal;
-                        self->arrToken[ulTokenVal]->ulFrequency = 0;
-                        self->ulNumTokens++;
+                    /* Ignore the dummy tokens: (ff)+ and (00)+. */
+                    if ((ulTokenVal != 0) && (ulTokenVal != (_ulMaxValue - 1))) {
+                        if (self->arrToken[ulTokenVal] == NULL) {
+                            self->arrToken[ulTokenVal] = (Token*)Malloc(sizeof(Token));
+                            self->arrToken[ulTokenVal]->ulValue = ulTokenVal;
+                            self->arrToken[ulTokenVal]->ulFrequency = 0;
+                            self->ulNumTokens++;
+                        }
+                        self->arrToken[ulTokenVal]->ulFrequency++;
                     }
-                    self->arrToken[ulTokenVal]->ulFrequency++;
 
                     /* Adjust the front-end location pointers. */
                     cIdxBitVF--;

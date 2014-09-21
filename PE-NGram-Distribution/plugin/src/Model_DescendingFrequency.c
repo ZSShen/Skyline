@@ -75,28 +75,23 @@ int model_run(NGram *pNGram, ulong ulMaxValue) {
         /* Sort the tokens. */
         qsort(pNGram->arrToken, ulMaxValue, sizeof(Token*), _CompTokenFreqDescOrder);
 
-        /* Adjust the size of arrToken to eliminate NULL elements. */
-        pNGram->arrToken = Realloc(pNGram->arrToken, sizeof(Token*) * pNGram->ulNumTokens);
-
-        /* Ignore the dummy tokens: (ff)+ and (00)+. */
-        pNGram->ulNumSlices = pNGram->ulNumTokens - 2;
+        pNGram->ulNumSlices = pNGram->ulNumTokens;
         pNGram->arrSlice = NULL;
         pNGram->arrSlice = (Slice**)Calloc(pNGram->ulNumSlices, sizeof(Slice*));
         for (i = 0 ; i < pNGram->ulNumSlices ; i++)
             pNGram->arrSlice[i] = NULL; 
     
         /* Choose the most frequently appearing token as the denominator. */
-        for (i = 0 ; i < pNGram->ulNumTokens ; i++) {
-            pToken = pNGram->arrToken[i];
-            if ((pToken->ulValue != 0) && (pToken->ulValue != (ulMaxValue - 1))) {
-                pDenominator  = pToken;
-                break;
-            }
-        }
+        pDenominator = pNGram->arrToken[0];
 
         /* Collect the slices. */
         for (i = 0, j = 0; i < pNGram->ulNumTokens ; i++) {
             pToken = pNGram->arrToken[i];
+            
+            if (pToken == NULL) {
+                break;
+            }
+
             if ((pToken->ulValue != 0) && (pToken->ulValue != (ulMaxValue - 1))) {
                 pNumerator = pToken;
                 
