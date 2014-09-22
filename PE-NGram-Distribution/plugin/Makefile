@@ -32,6 +32,9 @@ FLAG = -fPIC
 ifeq ($(DEBUG), true)
 	FLAG := $(FLAG) -g
 endif
+ifeq ($(COVERAGE), true)
+	FLAG := $(FLAG) -o0 --coverage
+endif
 
 
 # List the dependencies for project building.

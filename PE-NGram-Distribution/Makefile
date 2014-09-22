@@ -16,6 +16,8 @@ ifeq ($(DEBUG), true)
 else
 	PATH_OUT := $(PATH_OUT_REL)$(NAME_EXE)
 endif
+PATH_GLD := $(PATH_CUR)/golden/
+PATH_GLD_CASE := $(PATH_GLD)case
 
 
 # Create the relevant folders to store objective and executable files.
@@ -36,12 +38,18 @@ FLAG := -fPIC
 ifeq ($(DEBUG), true)
 	FLAG := $(FLAG) -g
 endif
+ifeq ($(COVERAGE), true)
+	FLAG := $(FLAG) -O0 --coverage
+endif
 
 
 # Specify the command to run makefile of the plugin.
 MAKE_PLUGIN := make dynamic
 ifeq ($(DEBUG), true)
 	MAKE_PLUGIN := $(MAKE_PLUGIN) DEBUG=true
+endif
+ifeq ($(COVERAGE), true)
+	MAKE_PLUGIN := $(MAKE_PLUGIN) COVERAGE=true
 endif
 
 
@@ -78,4 +86,10 @@ ifeq ($(DEBUG), true)
 else
 	$(PATH_OUT) -i $(INPUT) -o $(OUTPUT) -d $(DIMENSION) -t $(REPORT)
 endif
+
+
+# List the code coverage testing rules.
+coverage:
+#	tar zxvf $(PATH_GLD_CASE).tar.gz -C $(PATH_GLD)
+#	rm -rf $(PATH_GLD_CASE)
 
