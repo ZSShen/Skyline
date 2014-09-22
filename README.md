@@ -1,5 +1,5 @@
 #Windows-PE-Research
-
+[![Build Status](https://travis-ci.org/ZSShen/Windows-PE-Research.svg?branch=master)](https://travis-ci.org/ZSShen/Windows-PE-Research)
 
 ##Introduction
 
