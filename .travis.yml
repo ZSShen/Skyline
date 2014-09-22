@@ -17,5 +17,3 @@ script:
     - cd PE-NGram-Distribution/
     - make executable DEBUG=true
 
-#after_success:
-#    - coveralls 
