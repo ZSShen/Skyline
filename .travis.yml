@@ -15,5 +15,9 @@ install:
 
 script:
     - cd PE-NGram-Distribution/
-    - make executable DEBUG=true
+    - make executable DEBUG=true COVERAGE=true
+    - make coverage DEBUG=true
+
+after_success:
+    - coveralls
 

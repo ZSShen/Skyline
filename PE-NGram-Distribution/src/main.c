@@ -179,8 +179,8 @@ EXIT:
 
 void print_usage() {
 
-    const char *cszMsg = "Usage: ngram_distribution --input path_input --output path_output --dimension num --report flags.\n"
-                         "       ngram_distribution -i      path_input -o       path_output -d          num -t       flags.\n\n"
+    const char *cszMsg = "Usage: pe_ngram --input path_input --output path_output --dimension num --report flags.\n"
+                         "       pe_ngram -i      path_input -o       path_output -d          num -t       flags.\n\n"
                          "       path_input : The path to the input sample.\n"
                          "       path_output: The path to the output report folder.\n"
                          "                    (Only accpet absolute paths.)\n"
@@ -192,8 +192,8 @@ void print_usage() {
                          "                    (flag 'i' : For visualized image of n-gram model.)\n"
                          "                    (The 'i' flag must be after the 't' flag.)\n"
                          "                    (e.g. : e, t, i, et, eti)\n\n"
-                         "Example: ngram_distribution --input /repo/sample/a.exe --output /repo/analysis/a --dimension 2 --report eti\n"
-                         "         ngram_distribution -i /repo/sample/a.exe -o /repo/sample/a -d 2 -t eti\n\n";
+                         "Example: pe_ngram --input /repo/sample/a.exe --output /repo/analysis/a --dimension 2 --report eti\n"
+                         "         pe_ngram -i /repo/sample/a.exe -o /repo/sample/a -d 2 -t eti\n\n";
     printf("%s", cszMsg);
     return;
 }

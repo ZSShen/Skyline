@@ -1,5 +1,5 @@
 
-# Define the constants for folders and files.
+# Define the constants for folders and files (Relevant to normal debug and release).
 PATH_CUR := $(shell pwd)
 PATH_SRC := $(PATH_CUR)/src/
 PATH_INC := $(PATH_CUR)/include/
@@ -16,8 +16,12 @@ ifeq ($(DEBUG), true)
 else
 	PATH_OUT := $(PATH_OUT_REL)$(NAME_EXE)
 endif
+
+# Define the constants for folders and files (Relevant to CI coverage testing).
 PATH_GLD := $(PATH_CUR)/golden/
 PATH_GLD_CASE := $(PATH_GLD)case
+PATH_GLD_CASE_TAR := $(PATH_GLD_CASE).tar.gz
+PATH_GLD_COVERAGE := $(PATH_GLD)coverage.py $(PATH_OUT) $(PATH_GLD_CASE_TAR) $(PATH_GLD_CASE)
 
 
 # Create the relevant folders to store objective and executable files.
@@ -90,6 +94,6 @@ endif
 
 # List the code coverage testing rules.
 coverage:
-#	tar zxvf $(PATH_GLD_CASE).tar.gz -C $(PATH_GLD)
-#	rm -rf $(PATH_GLD_CASE)
+	$(PATH_GLD_COVERAGE)
+
 
