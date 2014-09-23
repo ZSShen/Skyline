@@ -1,5 +1,6 @@
 #Windows-PE-Research
 [![Build Status](https://travis-ci.org/ZSShen/Windows-PE-Research.svg?branch=master)](https://travis-ci.org/ZSShen/Windows-PE-Research)
+[![Coverage Status](https://coveralls.io/repos/ZSShen/Windows-PE-Research/badge.png)](https://coveralls.io/r/ZSShen/Windows-PE-Research)
 
 ##Introduction
 
