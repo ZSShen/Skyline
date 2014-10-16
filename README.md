@@ -30,13 +30,11 @@ For the two aspects, the default selected plugins are:
 + Retrieve the section with maximum average entropy.  
 + Generate the frequency model with descending order.  
 
-Besides, the engine can provide the graphcial report  
-to visualize the trend of distribution. For this, please  
-make sure that the `gnuplot` utility is already installed.  
+Besides, the engine can provide the graphcial report to visualize the trend of distribution.  
+For this, please make sure that the `gnuplot` utility is already installed.  
     
-On the other hand, the engine can be built for normal or debug version.  
-For debug version, please make sure that the `valgrind` utility is  
-already installed to turn on the memory usage inspection.  
+On the other hand, the engine can be built for normal or debug version. For debug version, please  
+make sure that the `valgrind` utility is already installed to turn on the memory usage inspection.  
 
 ####1.1 Source Tree
     |-- Makefile
