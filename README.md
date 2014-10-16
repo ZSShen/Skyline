@@ -4,19 +4,14 @@
 
 ##Introduction
 
-A research project for Windoes PE which tries to discover the
-similarity among a file and its obfuscated instances using
-different types of packers.
+A research project for Windoes PE which tries to discover the similarity among a file and its obfuscated  
+instances using different types of packers.
 
-Specifically, it transforms a givien file into the distribution
-model of n-gram tokens using a set of binary blocks selected by
-heuristics. Such frequency model will be the core material for
-similarity comparison.
+Specifically, it transforms a givien file into the distribution model of n-gram tokens using a set of binary  
+blocks selected by heuristics. Such frequency model will be the core material for similarity comparison.  
 
-Currently, this project focuses on the n-gram model generation.
-For the applications like clustering and classification for
-similar PE files, one can fork the project as the core utility
-for system integration.
+Currently, this project focuses on the n-gram model generation. For the applications like clustering and  
+classification for similar PE files, one can fork the project as the core utility for system integration.  
 
 ##Usage
 ###1. Source Building
@@ -37,34 +32,34 @@ On the other hand, the engine can be built for normal or debug version. For debu
 make sure that the `valgrind` utility is already installed to turn on the memory usage inspection.  
 
 ####1.1 Source Tree
-    |-- Makefile
-    |-- src
-        |-- main.c
-        |-- util.c
-        |-- except.c
-        |-- pe_info.c
-        |-- region.c
-        |-- ngram.c
-        |-- report.c
-    |-- include
-        |-- util.h
-        |-- except.h
-        |-- pe_info.h
-        |-- region.h
-        |-- ngram.h
-        |-- report.h
-    |-- plugin
-        |-- Makefile
-        |-- src
-            |--Region_Template.c (The template for plugin.)
-            |--Region_MaxEntropySection.c (The default plugin.)
-            |--Model_Template.c (The template for plugin.)
-            |--Model_DescendingFrequency.c (The default plugin.)
-        |-- obj (after first build.)
-        |-- lib (after first build.)
-    |-- obj (after first build.)
-    |-- release (after first build.)
-    |-- debug (after first build.)
++ Makefile
++ src
+    - main.c
+    - util.c
+    - except.c
+    - pe_info.c
+    - region.c
+    - ngram.c
+    - report.c
++ include
+    - util.h
+    - except.h
+    - pe_info.h
+    - region.h
+    - ngram.h
+    - report.h
+    - plugin
+        * Makefile
+        * src
+            * Region_Template.c (The template for plugin.)
+            * Region_MaxEntropySection.c (The default plugin.)
+            * Model_Template.c (The template for plugin.)
+            * Model_DescendingFrequency.c (The default plugin.)
+        * obj (after first build.)
+        * lib (after first build.)
+    - obj (after first build.)
+    - release (after first build.)
+    - debug (after first build.)
     
     
 ####1.2 Building Entire Source
