@@ -4,39 +4,39 @@
 
 ##Introduction
 
-A research project for Windoes PE which tries to discover the 
-similarity among a file and its obfuscated instances using 
-different types of packers.
+A research project for Windoes PE which tries to discover the  
+similarity among a file and its obfuscated instances using  
+different types of packers.  
 
-Specifically, it transforms a givien file into the distribution
-model of n-gram tokens using a set of binary blocks selected by
-heuristics. Such frequency model will be the core material for 
-similarity comparison.
+Specifically, it transforms a givien file into the distribution  
+model of n-gram tokens using a set of binary blocks selected by  
+heuristics. Such frequency model will be the core material for  
+similarity comparison.  
 
-Currently, this project focuses on the n-gram model generation. 
-For the applications like clustering and classification for
-similar PE files, one can fork the project as the core utility 
-for system integration.
+Currently, this project focuses on the n-gram model generation.  
+For the applications like clustering and classification for  
+similar PE files, one can fork the project as the core utility  
+for system integration.  
 
 ##Usage
 ###1. Source Building
-    The project can now be utilized only under the Linux-related platform.
+The project can now be utilized only under the `Linux-related platform`.  
+
+It can be divided into two parts:  
++ The engine which controls the entire workflow.  
++ The plugins for binary block selection and model generation.  
+
+For the two aspects, the default selected plugins are:  
++ Retrieve the section with maximum average entropy.  
++ Generate the frequency model with descending order.  
+
+Besides, the engine can provide the graphcial report  
+to visualize the trend of distribution. For this, please  
+make sure that the `gnuplot` utility is already installed.  
     
-    It can be divided into two parts:
-        The engine which controls the entire workflow.
-        The plugins for binary block selection and model generation.
-        
-    For the two aspects, the default selected plugins are:
-        Retrieve the section with maximum average entropy.
-        Generate the frequency model with descending order.
-    
-    Besides, the engine can provide the graphcial report
-    to visualize the tend of distribution. For this, please
-    make sure that the "gnuplot" utility is already installed.
-    
-    On the other hand, the engine can be built for normal or debug version.
-    For debug version, please make sure that the "valgrind" utility is
-    already installed to turn on the memory usage inspection.
+On the other hand, the engine can be built for normal or debug version.  
+For debug version, please make sure that the `valgrind` utility is  
+already installed to turn on the memory usage inspection.  
 
 ####1.1 Source Tree
     |-- Makefile
