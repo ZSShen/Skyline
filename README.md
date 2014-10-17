@@ -25,11 +25,12 @@ For the two aspects, the default selected plugins are:
 + Retrieve the section with maximum average entropy.  
 + Generate the frequency model with descending order.  
 
-Besides, the engine can provide the graphcial report to visualize the trend of distribution.  
-For this, please make sure that the `gnuplot` utility is already installed.  
+Besides, the engine can provide the graphcial report to visualize the trend of  
+distribution. For this, make sure that the `gnuplot` utility is installed.  
     
-On the other hand, the engine can be built for normal or debug version. For debug version, please  
-make sure that the `valgrind` utility is already installed to turn on the memory usage inspection.  
+On the other hand, the engine can be built for normal or debug version. For debug   
+version, please make sure that the `valgrind` utility is already installed to turn  
+on the memory usage inspection.  
 
 ####1.1 Source Tree
 + Makefile
@@ -63,58 +64,58 @@ make sure that the `valgrind` utility is already installed to turn on the memory
     
     
 ####1.2 Building Entire Source
-    There is a major Makefile at the top of source tree:
-        For the normal release build, execute `make executable`.
-        For the debug build, execute `make executable DEBUG=true`.
+There is a major Makefile at the top of source tree:
++ For the normal release build, execute `make executable`.
++ For the debug build, execute `make executable DEBUG=true`.
     
-    Note that both kinds of builds will also compile the default plugins.
+Note that both kinds of builds will also compile the default plugins.
 
 ####1.3 Builing Plugin
-    There is a second-level Makefile in the plugin folder:
-        For the plugin of binary block selection:
-            Execute `make dynamic_region REGION=[NameOfSourceFile]`.
-            e.g.: `make dynamic_region REGION=Region_MaxEntropySection`
-    
-        For the plugin fo model generation:
-            Execute `make dynamic_model MODEL=[NameOfSourceFile]`.
-            e.g.: `make dynamic_model MODEL=Model_DescendingFrequency`
+There is a second-level Makefile in the plugin folder:  
++ For the plugin of binary block selection:  
+  Execute `make dynamic_region REGION=[NameOfSourceFile]`.  
+  e.g.: `make dynamic_region REGION=Region_MaxEntropySection`  
+
++ For the plugin fo model generation:  
+  Execute `make dynamic_model MODEL=[NameOfSourceFile]`.  
+  e.g.: `make dynamic_model MODEL=Model_DescendingFrequency`  
 
 ###2. Binary Execution
 ####2.1 Usage
-    The built binary is named "pe_ngram". Actually, one can execute
-    `pe_ngram -h` or `pe_ngram --help` for detail usage.
++ The built binary is named "pe_ngram". Actually, one can execute  
+  `pe_ngram -h` or `pe_ngram --help` for detail usage.  
 
-    There are four arguments to be specified:
-    --input     | -i [PathInputFile]
-    --output    | -o [PathOutputFolder]
-    --dimension | -d [NgramDimension]
-    --report    | -t [TypesOfReports]
+    - There are four arguments to be specified:  
+      `--input     | -i [PathInputFile]`  
+      `--output    | -o [PathOutputFolder]`  
+      `--dimension | -d [NgramDimension]`  
+      `--report    | -t [TypesOfReports]`  
     
-    PathInputFile   : The path to the input file.
-                      (Only accept absolute path.)
-    PathOutputFolder: The path to the output report folder.
-                      (Only accept absolute path.)
-    NgramDimension  : The dimension used to generate ngram tokens. 
-                      (Only accept range from 1 to 4.)
-    TypeOfReports   : The set of control flags for report types.
-                      (Flag 'e': For text dump of entropy information.)
-                      (Flag 't': For text dump of n-gram distribution.)
-                      (Flag 'i': For visualized image of n-gram model.)
-                      (Note that the image is dependent on the text dump.)
+      `PathInputFile   : The path to the input file.`  
+                        `(Only accept absolute path.)`  
+      `PathOutputFolder: The path to the output report folder.`  
+                        `(Only accept absolute path.)`  
+      `NgramDimension  : The dimension used to generate ngram tokens.`  
+                        `(Only accept range from 1 to 4.)`  
+      `TypeOfReports   : The set of control flags for report types.`  
+                        `(Flag 'e': For text dump of entropy information.)`  
+                        `(Flag 't': For text dump of n-gram distribution.)`  
+                        `(Flag 'i': For visualized image of n-gram model.)`  
+                        `(Note that the image is dependent on the text dump.)`  
                       
-    Usage Example:
-        `pe_ngram --input /path/a.exe --output /path/a.data/ --dimension 2 --report eti`
-        `pe_ngram -i      /path/a.exe -o       /path/a.data/ -d          2 -t       eti`
+    - Usage Example:  
+      `pe_ngram --input /path/a.exe --output /path/a.data/ --dimension 2 --report eti`
+      `pe_ngram -i      /path/a.exe -o       /path/a.data/ -d          2 -t       eti`
 
 ####2.2 Demo
-    Briefly demonstrate several images from the win32 notepad.exe and its
-    packed versions using differnt packers:
-![Notepad] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Notepad.png)
-![FSG] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Fsg_Notepad.png)
-![MEW] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Mew_Notepad.png)
-![RLPack] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_RLPack_Notepad.png)
-##Reference
++ Briefly demonstrate several images from the win32 notepad.exe and its  
+  packed versions using differnt packers:  
+![Notepad] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Notepad.png)  
+![FSG] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Fsg_Notepad.png)  
+![MEW] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_Mew_Notepad.png)  
+![RLPack] (http://raw.github.com/ZSShen/Windows-PE-Research/master/PE-NGram-Distribution/image/Demo_RLPack_Notepad.png)  
 
-The project is inspired by the research paper from G.Jacob et. al.  
-* [A Static, Packer-Agnostic Filter to Detect Similar Malware Samples]
-(https://www.cs.ucsb.edu/~vigna/publications/2012_DIMVA_packedmalware.pdf)
+##Reference
++ The project is inspired by the research paper from G.Jacob et. al.  
+  [A Static, Packer-Agnostic Filter to Detect Similar Malware Samples]
+  (https://www.cs.ucsb.edu/~vigna/publications/2012_DIMVA_packedmalware.pdf)
