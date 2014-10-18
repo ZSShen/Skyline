@@ -58,9 +58,9 @@ on the memory usage inspection.
             * Model_DescendingFrequency.c (The default plugin.)
         * obj (after first build.)
         * lib (after first build.)
-    - obj (after first build.)
-    - release (after first build.)
-    - debug (after first build.)
++ obj (after first build.)
++ release (after first build.)
++ debug (after first build.)
     
     
 ####1.2 Building Entire Source
