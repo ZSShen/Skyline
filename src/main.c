@@ -18,7 +18,7 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszLibName,
 
 
 /* Bundle operations to manipulate NGram structure and generate the user-specified model. */
-int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension, 
+int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension,
                     PEInfo *pPEInfo, RegionCollector *pRegionCollector);
 
 
@@ -36,8 +36,8 @@ int main(int argc, char **argv, char **envp) {
     NGram           *pNGram;
     Report          *pReport;
     char            szOrder[BUF_SIZE_SMALL];
-    
-    /* Craft the structure to store command line options. */    
+
+    /* Craft the structure to store command line options. */
     static struct option Options[] = {
         {OPT_LONG_HELP     , required_argument, 0, OPT_HELP     },
         {OPT_LONG_INPUT    , required_argument, 0, OPT_INPUT    },
@@ -49,8 +49,8 @@ int main(int argc, char **argv, char **envp) {
     };
 
     memset(szOrder, 0, sizeof(char) * BUF_SIZE_SMALL);
-    sprintf(szOrder, "%c%c:%c:%c:%c:%c:%c:", OPT_HELP, OPT_INPUT, OPT_OUTPUT, OPT_DIMENSION, 
-                                             OPT_REPORT, OPT_REGION, OPT_MODEL);    
+    sprintf(szOrder, "%c%c:%c:%c:%c:%c:%c:", OPT_HELP, OPT_INPUT, OPT_OUTPUT, OPT_DIMENSION,
+                                             OPT_REPORT, OPT_REGION, OPT_MODEL);
     cszInput = cszOutput = cszReportSeries = cszLibRegion = cszLibModel = NULL;
     rc = 0;
 
@@ -85,7 +85,7 @@ int main(int argc, char **argv, char **envp) {
             default: {
                 print_usage();
                 rc = -1;
-                goto EXIT;            
+                goto EXIT;
             }
         }
     }
@@ -105,10 +105,10 @@ int main(int argc, char **argv, char **envp) {
 
     /* Check the dimension. */
     if ((ucDimension == 0) || (ucDimension > 4)) {
-        print_usage();        
+        print_usage();
         rc = -1;
         goto EXIT;
-    }    
+    }
 
     /* Check the designated report type. */
     if ((cszReportSeries == NULL) || ((iLen = strlen(cszReportSeries)) == 0)) {
@@ -120,7 +120,7 @@ int main(int argc, char **argv, char **envp) {
             switch(cszReportSeries[i]) {
                 case ABV_TOKEN_REPORT_SECTION_ENTROPY: {
                     uiMask |= MASK_REPORT_SECTION_ENTROPY;
-                    break;                
+                    break;
                 }
                 case ABV_TOKEN_REPORT_TXT_NGRAM: {
                     uiMask |= MASK_REPORT_TXT_NGRAM;
@@ -128,7 +128,7 @@ int main(int argc, char **argv, char **envp) {
                 }
                 case ABV_TOKEN_REPORT_PNG_NGRAM: {
                     uiMask |= MASK_REPORT_PNG_NGRAM;
-                    break;            
+                    break;
                 }
             }
         }
@@ -201,18 +201,17 @@ void print_usage() {
 
 int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
     int     rc;
-    PEInfo  *pPEInfo;    
-
-    rc = 0;
+    PEInfo  *pPEInfo;
 
     /* Initialize the PEInfo structure. */
+    rc = 0;
     PEInfo_init(*ppPEInfo);
     if (*ppPEInfo == NULL) {
         rc = -1;
         goto EXIT;
     }
 
-    pPEInfo = *ppPEInfo;        
+    pPEInfo = *ppPEInfo;
 
     /* Open the input sample for analysis. */
     rc = pPEInfo->openSample(pPEInfo, cszInput);
@@ -238,9 +237,8 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszLibName,
     int     rc;
     RegionCollector *pRegionCollector;
 
-    rc = 0;    
-
     /* Initialize the RegionCollector structure. */
+    rc = 0;
     RegionCollector_init(*ppRegionCollector);
     if (*ppRegionCollector != NULL) {
         pRegionCollector = *ppRegionCollector;
@@ -254,14 +252,13 @@ int select_features(RegionCollector **ppRegionCollector, const char *cszLibName,
 }
 
 
-int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension, 
+int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension,
                     PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int     rc;
     NGram   *pNGram;
 
-    rc = 0;
-
     /* Initialize the NGram structure. */
+    rc = 0;
     NGram_init(*ppNGram);
 
     if (*ppNGram != NULL) {
@@ -284,9 +281,8 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
     const char *cszSampleName;
     Report     *pReport;
 
-    rc = 0;
-    
     /* Initialize the Report structure. */
+    rc = 0;
     Report_init(*ppReport);
 
     if (*ppReport != NULL) {
@@ -308,7 +304,7 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
         }
 
         /* Generate the full n-gram model report. */
-        if (uiMask & MASK_REPORT_TXT_NGRAM) {        
+        if (uiMask & MASK_REPORT_TXT_NGRAM) {
             rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
             if (rc != 0)
                 goto EXIT;
@@ -320,7 +316,7 @@ int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const cha
             if (rc != 0)
                 goto EXIT;
         }
-    } else 
+    } else
         rc = -1;
 
 EXIT:

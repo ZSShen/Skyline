@@ -22,9 +22,9 @@ typedef struct _EntropyInfo {
 /* Structure to store the section information. */
 typedef struct _SectionInfo {
     ulong       ulRawSize, ulRawOffset, ulCharacteristics;
-    uchar       uszNormalizedName[SECTION_HEADER_SECTION_NAME_SIZE + 1]; 
+    uchar       uszNormalizedName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
     uchar       uszOriginalName[SECTION_HEADER_SECTION_NAME_SIZE + 1];
-    EntropyInfo *pEntropyInfo;    
+    EntropyInfo *pEntropyInfo;
 } SectionInfo;
 
 
@@ -43,19 +43,19 @@ typedef struct _PEInfo {
 
 
 /* Wrapper for PEInfo initialization. */
-#define PEInfo_init(p)          try { \
-                                    p = (PEInfo*)Malloc(sizeof(PEInfo)); \
-                                    PEInfoInit(p); \
-                                } catch (EXCEPT_MEM_ALLOC) { \
-                                    p = NULL; \
-                                } end_try; 
+#define PEInfo_init(p)          try {                                           \
+                                    p = (PEInfo*)Malloc(sizeof(PEInfo));        \
+                                    PEInfoInit(p);                              \
+                                } catch (EXCEPT_MEM_ALLOC) {                    \
+                                    p = NULL;                                   \
+                                } end_try;
 
 
 /* Wrapper for PEInfo deinitialization. */
-#define PEInfo_deinit(p)        if (p != NULL) { \
-                                    PEInfoDeinit(p); \
-                                    Free(p); \
-                                    p = NULL; \
+#define PEInfo_deinit(p)        if (p != NULL) {                                \
+                                    PEInfoDeinit(p);                            \
+                                    Free(p);                                    \
+                                    p = NULL;                                   \
                                 }
 
 
@@ -72,7 +72,7 @@ void PEInfoDeinit(PEInfo *pPEInfo);
  *
  * @param   self            The pointer to the PEInfo structure.
  * @param   cszSamplePath   The path of the specified sample.
- * 
+ *
  * @return                  0: The sample is successfully opened.
  *                        < 0: The sample cannot be opend.
  */

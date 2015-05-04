@@ -2,7 +2,7 @@
 
 
 void PEInfoInit(PEInfo *self) {
-    
+
     self->szSampleName = NULL;
     self->fpSample = NULL;
     self->pPEHeader = NULL;
@@ -27,24 +27,24 @@ void PEInfoDeinit(PEInfo *self) {
 
     if (self->fpSample != NULL)
         Fclose(self->fpSample);
-    
+
     /* Free all the SectionInfo structures. */
     if (self->arrSectionInfo != NULL) {
         for (i = 0 ; i < self->pPEHeader->usNumSections ; i++) {
             if (self->arrSectionInfo[i] != NULL) {
 
-                /* Free the EntropyInfo structure. */                
+                /* Free the EntropyInfo structure. */
                 pEntropyInfo = self->arrSectionInfo[i]->pEntropyInfo;
                 if (pEntropyInfo != NULL) {
                     if (pEntropyInfo->arrEntropy != NULL)
                         Free(pEntropyInfo->arrEntropy);
-                    Free(pEntropyInfo);                
-                }                
+                    Free(pEntropyInfo);
+                }
 
                 Free(self->arrSectionInfo[i]);
             }
         }
-        Free(self->arrSectionInfo);    
+        Free(self->arrSectionInfo);
     }
 
     /* Free the PEHeader structure. */
@@ -54,18 +54,14 @@ void PEInfoDeinit(PEInfo *self) {
     return;
 }
 
-/**
- * PEInfoOpenSample(): Open the specified sample for analysis.
- */
 int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
     int rc, idxFront, idxTail;
 
+    rc = 0;
     try {
-        rc = 0;
-    
-        /* Create the file pointer for the input sample. */        
+        /* Create the file pointer for the input sample. */
         self->fpSample = Fopen(cszSamplePath, "rb");
-        
+
         /* Extract the name of the input sample. */
         idxTail = strlen(cszSamplePath);
         idxFront = idxTail;
@@ -73,15 +69,15 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
             idxTail--;
         if (idxTail == 0)
             idxTail = idxFront;
-            
+
         idxFront = idxTail;
-        idxTail--;    
+        idxTail--;
         while ((idxFront > 0) && (cszSamplePath[idxFront - 1] != OS_PATH_SEPARATOR))
             idxFront--;
 
         self->szSampleName = (char*)Calloc((idxTail - idxFront + 1), sizeof(char));
         memset(self->szSampleName, 0, sizeof(char) * (idxTail - idxFront + 1));
-        strncpy(self->szSampleName, cszSamplePath + idxFront, idxTail - idxFront); 
+        strncpy(self->szSampleName, cszSamplePath + idxFront, idxTail - idxFront);
     } catch(EXCEPT_MEM_ALLOC) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_OPEN) {
@@ -91,11 +87,6 @@ int PEInfoOpenSample(PEInfo *self, const char *cszSamplePath) {
     return rc;
 }
 
-
-/**
- * PEInfoParseHeaders(): Collect the information from MZ header, PE header, PE option header,
- *                       and all the section headers.
- */
 int PEInfoParseHeaders(PEInfo *self) {
     int     rc, i, j;
     ushort  ulWord;
@@ -103,16 +94,16 @@ int PEInfoParseHeaders(PEInfo *self) {
     size_t  nExptRead, nRealRead;
     uchar   *uszOriginalName;
     uchar   buf[BUF_SIZE_SMALL];
-    
+
     rc = 0;
     try {
         /* Create the PEHeader structure. */
         self->pPEHeader = NULL;
         self->pPEHeader = (PEHeader*)Malloc(sizeof(PEHeader));
-        
-        //------------------------------------------------
-        //  Examine DOS(MZ) header.
-        //------------------------------------------------
+
+        /*------------------------------------------------*
+         *  Examine DOS(MZ) header.                       *
+         *------------------------------------------------*/
         /* Check the MZ header. */
         nExptRead = DOS_HEADER_SIZE;
         nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
@@ -121,7 +112,7 @@ int PEInfoParseHeaders(PEInfo *self) {
             rc = -1;
             goto EXIT;
         }
-        
+
         /* Resolve the starting offset of PE header. */
         ulDword = 0;
         for (i = 1 ; i <= DATATYPE_SIZE_DWORD ; i++) {
@@ -133,10 +124,10 @@ int PEInfoParseHeaders(PEInfo *self) {
         /* Move to the starting offset of PE header. */
         ulOffset = ulDword;
         Fseek(self->fpSample, ulOffset, SEEK_SET);
-      
-        //------------------------------------------------
-        //  Examine PE header.
-        //------------------------------------------------
+
+        /*------------------------------------------------*
+         *  Examine PE header.                            *
+         *------------------------------------------------*/
         /* Check the PE header. */
         nExptRead = PE_HEADER_SIZE;
         nRealRead = Fread(buf, sizeof(uchar), nExptRead, self->fpSample);
@@ -145,7 +136,7 @@ int PEInfoParseHeaders(PEInfo *self) {
             rc = -1;
             goto EXIT;
         }
-    
+
         /* Resolve the amount of sections. */
         ulWord = 0;
         for (i = 1 ; i <= DATATYPE_SIZE_WORD ; i++) {
@@ -160,21 +151,21 @@ int PEInfoParseHeaders(PEInfo *self) {
             ulWord <<= SHIFT_RANGE_8BIT;
             ulWord += buf[PE_HEADER_OFF_SIZE_OF_OPT_HEADER + DATATYPE_SIZE_WORD - i] & 0xff;
         }
-        
+
         /* Move to the starting offset of section headers. */
         ulOffset = self->pPEHeader->ulHeaderOffset + PE_HEADER_SIZE + ulWord;
         Fseek(self->fpSample, ulOffset, SEEK_SET);
-        
-        //------------------------------------------------
-        //  Examine all the section headers.
-        //------------------------------------------------
+
+        /*------------------------------------------------*
+         *  Examine all the section headers.              *
+         *------------------------------------------------*/
         /* Create the array to store the SectionInfo structure for each section. */
         ulWord = self->pPEHeader->usNumSections;
         self->arrSectionInfo = (SectionInfo**)Calloc(ulWord, sizeof(SectionInfo*));
         for (i = 0 ; i < ulWord ; i++) {
             (self->arrSectionInfo)[i] = NULL;
         }
-        
+
         /* Traverse the section headers to collect the information from each section. */
         for (i = 0 ; i < ulWord ; i++) {
             nExptRead = SECTION_HEADER_PER_ENTRY_SIZE;
@@ -184,16 +175,16 @@ int PEInfoParseHeaders(PEInfo *self) {
                 rc = -1;
                 goto EXIT;
             }
-            
+
             /* Create the SectionInfo structure. */
             self->arrSectionInfo[i] = NULL;
             self->arrSectionInfo[i] = (SectionInfo*)Malloc(sizeof(SectionInfo));
             self->arrSectionInfo[i]->pEntropyInfo = NULL;
-        
+
             /* Record the section name. */
             memset(self->arrSectionInfo[i]->uszOriginalName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);
-            memset(self->arrSectionInfo[i]->uszNormalizedName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);            
-        
+            memset(self->arrSectionInfo[i]->uszNormalizedName, 0, SECTION_HEADER_SECTION_NAME_SIZE + 1);
+
             memcpy(self->arrSectionInfo[i]->uszOriginalName, buf, sizeof(uchar) * SECTION_HEADER_SECTION_NAME_SIZE);
             uszOriginalName = self->arrSectionInfo[i]->uszOriginalName;
             for (j = 0 ; j < SECTION_HEADER_SECTION_NAME_SIZE ; j++) {
@@ -202,7 +193,7 @@ int PEInfoParseHeaders(PEInfo *self) {
                 else
                     self->arrSectionInfo[i]->uszNormalizedName[j] = '_';
             }
-            
+
             /* Record the raw section size. */
             ulDword = 0;
             for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
@@ -210,7 +201,7 @@ int PEInfoParseHeaders(PEInfo *self) {
                 ulDword += buf[SECTION_HEADER_OFF_RAW_SIZE + DATATYPE_SIZE_DWORD - j] & 0xff;
             }
             self->arrSectionInfo[i]->ulRawSize = ulDword;
-        
+
             /* Record the raw section offset. */
             ulDword = 0;
             for (j = 1 ; j <= DATATYPE_SIZE_DWORD ; j++) {
@@ -235,15 +226,11 @@ int PEInfoParseHeaders(PEInfo *self) {
         Log0("Invalid PE file (The target header can not be reached).\n");
         rc = -1;
     } end_try;
-    
+
 EXIT:
     return rc;
 }
 
-
-/**
- * PEInfoCalculateSectionEntropy(): Calculate and collect the entropy data of each section.
- */
 int PEInfoCalculateSectionEntropy(PEInfo *self) {
     int         rc, i, j, idxBlk;
     ulong       ulRawSize, ulRawOffset, ulCurrRead;
@@ -251,23 +238,22 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
     double      dEntropy, dMax, dAvg, dMin, dProb, dLogProb, dLogBase;
     SectionInfo *pSection;
     uchar       buf[ENTROPY_BLK_SIZE], refFreq[ENTROPY_BLK_SIZE];
-    
-    try {
-        rc = 0;
 
+    rc = 0;
+    try {
         for (i = 0 ; i < self->pPEHeader->usNumSections ; i++) {
             pSection = self->arrSectionInfo[i];
 
             ulRawSize = pSection->ulRawSize;
             ulRawOffset = pSection->ulRawOffset;
-            
+
             /* Skip the empty section. */
             if (ulRawSize == 0)
                 continue;
-                
+
             /* Move to the starting offset of the current section. */
             Fseek(self->fpSample, ulRawOffset, SEEK_SET);
-            
+
             /* Create the EntropyInfo structure. */
             pSection->pEntropyInfo = (EntropyInfo*)Malloc(sizeof(EntropyInfo));
             pSection->pEntropyInfo->arrEntropy = NULL;
@@ -278,10 +264,10 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
                 pSection->pEntropyInfo->ulNumBlks = ulRawSize / ENTROPY_BLK_SIZE + 1;
 
             pSection->pEntropyInfo->arrEntropy = (double*)Calloc(pSection->pEntropyInfo->ulNumBlks, sizeof(double));
-            
-            //------------------------------------------------
-            //  Main part of the entorpy calculation.
-            //------------------------------------------------
+
+            /*------------------------------------------------*
+             *  Main part of the entropy calculation.         *
+             *------------------------------------------------*/
             ulCurrRead = 0;
             idxBlk = 0;
             dMax = -1;
@@ -289,7 +275,6 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
             dAvg = 0;
 
             while (ulCurrRead < ulRawSize) {
-
                 /* Read a block of binary. */
                 nExptRead = ((ulRawSize - ulCurrRead) < ENTROPY_BLK_SIZE)? (ulRawSize - ulCurrRead) : ENTROPY_BLK_SIZE;
                 memset(buf, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
@@ -299,13 +284,13 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
                     rc = -1;
                     goto EXIT;
                 }
-  
+
                 /* Record the number of appearence times of each unique byte. */
                 memset(refFreq, 0, sizeof(uchar) * ENTROPY_BLK_SIZE);
-                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) 
+                for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++)
                     refFreq[buf[j]]++;
 
-                /* Calculate the entropy for this block. */                    
+                /* Calculate the entropy for this block. */
                 dEntropy = 0;
                 dLogBase = log(ENTROPY_LOG_BASE);
                 for (j = 0 ; j < ENTROPY_BLK_SIZE ; j++) {
@@ -320,11 +305,11 @@ int PEInfoCalculateSectionEntropy(PEInfo *self) {
                     dMax = dEntropy;
                 if (dEntropy < dMin)
                     dMin = dEntropy;
-                
+
                 pSection->pEntropyInfo->arrEntropy[idxBlk++] = dEntropy;
                 ulCurrRead += nRealRead;
             }
-            
+
             pSection->pEntropyInfo->dMaxEntropy = dMax;
             pSection->pEntropyInfo->dMinEntropy = dMin;
             pSection->pEntropyInfo->dAvgEntropy = dAvg / idxBlk;
@@ -340,15 +325,11 @@ EXIT:
     return rc;
 }
 
-
-/**
- * PEInfoDump(): Dump the information recorded from the input sample for debug.
- */
 void PEInfoDump(PEInfo *self) {
-    int         i, j;    
+    int         i, j;
     ushort      usNumSections;
     SectionInfo *pSection;
-    EntropyInfo *pEntropyInfo;    
+    EntropyInfo *pEntropyInfo;
 
     printf("Sample Name: %s\n", self->szSampleName);
     usNumSections = self->pPEHeader->usNumSections;
@@ -356,7 +337,7 @@ void PEInfoDump(PEInfo *self) {
 
     for (i = 0 ; i < usNumSections ; i++) {
         pSection = self->arrSectionInfo[i];
-        if (pSection != NULL) {        
+        if (pSection != NULL) {
             printf("Section    #%d\n", i);
             printf("Section    Name: %s\n", pSection->uszNormalizedName);
             printf("Characteristics: 0x%08lx\n", pSection->ulCharacteristics);
@@ -369,11 +350,11 @@ void PEInfoDump(PEInfo *self) {
             printf("Min Entropy: %.3lf\n", pEntropyInfo->dMinEntropy);
             for (j = 0 ; j < pEntropyInfo->ulNumBlks ; j++)
                 printf("\t%d\t%.3lf\n", j, pEntropyInfo->arrEntropy[j]);
-            
+
             printf("\n");
         }
     }
-    
+
     return;
 }
 

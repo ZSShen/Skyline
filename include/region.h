@@ -34,19 +34,19 @@ typedef int(*FUNC_PTR_REGION) (RegionCollector*, PEInfo*);
 
 
 /* Wrapper for RegionCollector initialization. */
-#define RegionCollector_init(p)     try { \
-                                        p = (RegionCollector*)Malloc(sizeof(RegionCollector)); \
-                                        RCInit(p); \
-                                    } catch (EXCEPT_MEM_ALLOC) { \
-                                        p = NULL; \
-                                    } end_try; 
+#define RegionCollector_init(p)     try {                                                       \
+                                        p = (RegionCollector*)Malloc(sizeof(RegionCollector));  \
+                                        RCInit(p);                                              \
+                                    } catch (EXCEPT_MEM_ALLOC) {                                \
+                                        p = NULL;                                               \
+                                    } end_try;
 
 
 /* Wrapper for RegionCollector deinitialization. */
-#define RegionCollector_deinit(p)   if (p != NULL) { \
-                                        RCDeinit(p); \
-                                        Free(p); \
-                                        p = NULL; \
+#define RegionCollector_deinit(p)   if (p != NULL) {                            \
+                                        RCDeinit(p);                            \
+                                        Free(p);                                \
+                                        p = NULL;                               \
                                     }
 
 
@@ -63,7 +63,7 @@ void RCDeinit(RegionCollector *self);
  *
  * @param   self        The pointer to the RegionCollector structure.
  * @param   cszMethod   The string describing the feature selection method.
- * @param   pPEInfo     The pointer to the to be analyzed PEInfo structure. 
+ * @param   pPEInfo     The pointer to the to be analyzed PEInfo structure.
  *
  * @return              0: The features are collected successfully.
  *                    < 0: Exception occurs while memory allocation.

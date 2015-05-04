@@ -12,38 +12,32 @@ void ReportInit(Report *self) {
     return;
 }
 
-
 /* Destructor for Report structure. */
 void ReportDeinit(Report *self) {
 
     return;
 }
 
-
-/**
- * ReportGenerateFolder(): Generate the folder to store reports.
- */
 int ReportGenerateFolder(Report *self, const char *cszDirPath) {
     int     rc, state, iLenPath, iLenRest;
     DIR     *dir;
     char    szPathReport[BUF_SIZE_MID + 1];
     struct dirent *entry;
-    
-    rc = 0;
 
+    rc = 0;
     try {
         #if defined(_WIN32)
 
         #elif defined(__linux__)
             dir = NULL;
             state = Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-            
-            /* The folder already exists and we should remove all the files residing in it. */            
+
+            /* The folder already exists and we should remove all the files residing in it. */
             if (state != 0) {
                 dir = Opendir(cszDirPath);
-                if (dir != NULL) {    
+                if (dir != NULL) {
                     iLenPath = strlen(cszDirPath);
-                    memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));                
+                    memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
                     strcpy(szPathReport, cszDirPath);
 
                     if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
@@ -52,12 +46,12 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
                     }
 
                     while ((entry = Readdir(dir)) != NULL) {
-                        if ((strcmp(entry->d_name, ".") != 0) && (strcmp(entry->d_name, "..") != 0)) {
-                            strcpy(szPathReport + iLenPath, entry->d_name);
-                            Unlink(szPathReport);
-                            iLenRest = strlen(entry->d_name);
-                            memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest); 
-                        }                       
+                        if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0))
+                            continue;
+                        strcpy(szPathReport + iLenPath, entry->d_name);
+                        Unlink(szPathReport);
+                        iLenRest = strlen(entry->d_name);
+                        memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest);
                     }
                 }
             }
@@ -65,25 +59,21 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
     } catch(EXCEPT_IO_DIR_OPEN) {
-        rc = -1;  
+        rc = -1;
     } catch(EXCEPT_IO_DIR_READ) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_UNLINK) {
-        rc = -1;    
+        rc = -1;
     } end_try;
-    
+
     if (dir != NULL)
         Closedir(dir);
 EXIT:
     return rc;
 }
 
-
-/**
- * ReportLogEntropyDistribution(): Log the entropy distribution of all the sections.
- */
 int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszDirPath, const char *cszSampleName) {
-    bool        bHasSep;    
+    bool        bHasSep;
     int         rc, i, j, iLenPath, iLenBuf, iCountBatch;
     ushort      usNumSections;
     ulong       ulSizeSection;
@@ -93,14 +83,13 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
     char        buf[BUF_SIZE_LARGE + 1], szPathReport[BUF_SIZE_MID + 1];
 
     rc = 0;
-
     try {
         /* Generate the report path string. */
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
         if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
-            bHasSep = true;        
+            bHasSep = true;
         }
         iLenPath += strlen(cszSampleName);
         iLenPath += strlen(REPORT_POSTFIX_TXT_SECTION_ENTROPY);
@@ -117,7 +106,7 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
         else
             sprintf(szPathReport, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_POSTFIX_TXT_SECTION_ENTROPY);
-        
+
         /* Prepare the file pointer for the report. */
         fpReport = Fopen(szPathReport, "w");
 
@@ -132,19 +121,19 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
         for (i = 0 ; i < usNumSections ; i++) {
             pSection = pPEInfo->arrSectionInfo[i];
             ulSizeSection = pSection->ulRawSize;
-            
+
             /* Log the section attributes. */
             memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
             sprintf(buf, "[Section #%d]\n", i);
-            iLenBuf = strlen(buf);            
-            sprintf(buf + iLenBuf, "Section    Name: %s\n", pSection->uszNormalizedName);               
+            iLenBuf = strlen(buf);
+            sprintf(buf + iLenBuf, "Section    Name: %s\n", pSection->uszNormalizedName);
             iLenBuf = strlen(buf);
             sprintf(buf + iLenBuf, "Characteristics: 0x%08lx\n", pSection->ulCharacteristics);
             iLenBuf = strlen(buf);
             sprintf(buf + iLenBuf, "Raw      Offset: 0x%08lx\n", pSection->ulRawOffset);
             iLenBuf = strlen(buf);
             sprintf(buf + iLenBuf, "Raw        Size: 0x%08lx\n", pSection->ulRawSize);
-            iLenBuf = strlen(buf);            
+            iLenBuf = strlen(buf);
 
             pEntropy = pSection->pEntropyInfo;
             if (pSection->ulRawSize == 0) {
@@ -152,17 +141,17 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
                 iLenBuf = strlen(buf);
             } else {
                 sprintf(buf + iLenBuf, "\tMax Entropy: %.3lf\n", pEntropy->dMaxEntropy);
-                iLenBuf = strlen(buf);            
+                iLenBuf = strlen(buf);
                 sprintf(buf + iLenBuf, "\tAvg Entropy: %.3lf\n", pEntropy->dAvgEntropy);
-                iLenBuf = strlen(buf);            
+                iLenBuf = strlen(buf);
                 sprintf(buf + iLenBuf, "\tMin Entropy: %.3lf\n", pEntropy->dMinEntropy);
-                iLenBuf = strlen(buf);            
+                iLenBuf = strlen(buf);
             }
             Fwrite(buf, sizeof(char), iLenBuf, fpReport);
-        
+
             /* Log the entropy distribution if the section is not empty. */
             if (pEntropy != NULL) {
-                iLenBuf = iCountBatch = 0;                
+                iLenBuf = iCountBatch = 0;
                 memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
                 for (j = 0 ; j < pEntropy->ulNumBlks ; j++) {
                     sprintf(buf + iLenBuf, "\t\tBlk #%d: %.3lf\n", j, pEntropy->arrEntropy[j]);
@@ -170,7 +159,7 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
                     iCountBatch++;
                     if (iCountBatch == BATCH_WRITE_LINE_COUNT) {
                         Fwrite(buf, sizeof(char), iLenBuf, fpReport);
-                        iLenBuf = iCountBatch = 0;                    
+                        iLenBuf = iCountBatch = 0;
                         memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
                     }
                 }
@@ -193,10 +182,6 @@ EXIT:
     return rc;
 }
 
-
-/**
- * ReportLogNGramModel(): Log the full n-gram model.
- */
 int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
     bool    bHasSep;
     int     rc, i, iLenPath, iLenBuf, iCountBatch;
@@ -205,14 +190,13 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
     char    buf[BUF_SIZE_LARGE + 1], szPathReport[BUF_SIZE_MID + 1];
 
     rc = 0;
-
     try {
         /* Generate the report path string. */
         bHasSep = false;
         iLenPath = strlen(cszDirPath);
         if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
-            bHasSep = true;        
+            bHasSep = true;
         }
         iLenPath += strlen(cszSampleName);
         iLenPath += strlen(REPORT_POSTFIX_TXT_NGRAM_MODEL);
@@ -221,7 +205,6 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
             Log1("The file path is too long (Maximum allowed length is %d bytes).\n", BUF_SIZE_MID);
             rc = -1;
             goto EXIT;
-
         }
 
         memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
@@ -236,33 +219,32 @@ int ReportLogNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, con
 
         /* Log each piece of n-gram model slice. */
         arrSlice = pNGram->arrSlice;
-        
+
         iLenBuf = iCountBatch = 0;
-        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);    
+        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
         for (i = 0 ; i < pNGram->ulNumSlices ; i++) {
             sprintf(buf + iLenBuf, "%d\t%.3lf\t#(0x%08lx:%lu)\t(0x%08lx:%lu)\n", i, arrSlice[i]->dScore,
                     arrSlice[i]->pNumerator->ulValue,
                     arrSlice[i]->pNumerator->ulFrequency,
                     arrSlice[i]->pDenominator->ulValue,
-                    arrSlice[i]->pDenominator->ulFrequency);            
+                    arrSlice[i]->pDenominator->ulFrequency);
             iLenBuf = strlen(buf);
             iCountBatch++;
 
-            if (arrSlice[i]->dScore < TRUNCATE_THRESHOLD) {
+            if (arrSlice[i]->dScore < TRUNCATE_THRESHOLD)
                 break;
-            }
 
             if (iCountBatch == BATCH_WRITE_LINE_COUNT) {
                 Fwrite(buf, sizeof(char), iLenBuf, fpReport);
                 iLenBuf = iCountBatch = 0;
-                memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);                
+                memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
             }
         }
         Fwrite(buf, sizeof(char), iLenBuf, fpReport);
 
         /* Release the file pointer. */
         Fclose(fpReport);
-        
+
     } catch(EXCEPT_IO_DIR_MAKE) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_WRITE) {
@@ -274,10 +256,6 @@ EXIT:
     return rc;
 }
 
-
-/**
- * ReportPlotNGramModel(): Plot the visualized trend line of n-gram model with gnuplot utility.
- */
 int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, const char *cszSampleName) {
     bool    bHasSep;
     int     rc, state, iLenPath, iLenBuf;
@@ -286,7 +264,6 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
     char    szPathLog[BUF_SIZE_MID + 1], szPathScript[BUF_SIZE_MID + 1], szPathImage[BUF_SIZE_MID + 1];
 
     rc = 0;
-
     try {
         /* Check if the raw n-gram dump exists. */
         bHasSep = false;
@@ -311,9 +288,9 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
             sprintf(szPathLog, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_POSTFIX_TXT_NGRAM_MODEL);
 
-        #if defined(_WIN32)        
+        #if defined(_WIN32)
 
-        #elif defined(__linux__)        
+        #elif defined(__linux__)
             state = access(szPathLog, F_OK);
         #endif
 
@@ -337,7 +314,7 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
             rc = -1;
             goto EXIT;
         }
-        
+
         memset(szPathImage, 0, sizeof(char) * (BUF_SIZE_MID + 1));
         if (bHasSep == true)
             sprintf(szPathImage, "%s%s%s", cszDirPath, cszSampleName, REPORT_POSTFIX_PNG_NGRAM_MODEL);
@@ -350,7 +327,7 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         iLenPath = strlen(cszDirPath);
         if (cszDirPath[iLenPath - 1] == OS_PATH_SEPARATOR) {
             iLenPath++;
-            bHasSep = true;        
+            bHasSep = true;
         }
         iLenPath += strlen(cszSampleName);
         iLenPath += strlen(REPORT_POSTFIX_GNU_PLOT_SCRIPT);
@@ -367,24 +344,24 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
         else
             sprintf(szPathScript, "%s%c%s%s", cszDirPath, OS_PATH_SEPARATOR, cszSampleName,
                     REPORT_POSTFIX_GNU_PLOT_SCRIPT);
-        
+
         /* Prepare the file pointer for the script. */
         fpScript = Fopen(szPathScript, "w");
 
         /* Compile the drawing commands. */
-        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);        
+        memset(buf, 0, sizeof(char) * BUF_SIZE_LARGE);
         iLenBuf = 0;
-        
+
         sprintf(buf, "set terminal png size %d, %d\n", REPORT_IMAGE_SIZE_WIDTH, REPORT_IMAGE_SIZE_HEIGHT);
         iLenBuf = strlen(buf);
 
-        #if defined(_WIN32)        
+        #if defined(_WIN32)
 
-        #elif defined(__linux__)        
+        #elif defined(__linux__)
             sprintf(buf + iLenBuf, "set output \"%s\"\n", szPathImage);
         #endif
         iLenBuf = strlen(buf);
-        
+
         sprintf(buf + iLenBuf, "set title \"%s\"\n", cszSampleName);
         iLenBuf = strlen(buf);
 
@@ -422,5 +399,3 @@ int ReportPlotNGramModel(Report *self, NGram *pNGram, const char *cszDirPath, co
 EXIT:
     return rc;
 }
-
-

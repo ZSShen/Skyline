@@ -5,7 +5,6 @@
  *                Implementation for exported functions                      *
  *===========================================================================*/
 void RCInit(RegionCollector *self) {
-
     /* Initialize member variables. */
     self->usNumRegions = 0;
     self->arrRegion = NULL;
@@ -23,8 +22,8 @@ void RCDeinit(RegionCollector *self) {
 
     if (self->arrRegion != NULL) {
         for (i = 0 ; i < self->usNumRegions ; i++) {
-        
-            /* Free the Range structure. */            
+
+            /* Free the Range structure. */
             pRegion = self->arrRegion[i];
             if (pRegion != NULL) {
 
@@ -32,10 +31,10 @@ void RCDeinit(RegionCollector *self) {
                 if (pRegion->arrRangePair != NULL) {
                     for (j = 0 ; j < pRegion->ulNumPairs ; j++) {
                         if (pRegion->arrRangePair[j] != NULL)
-                            Free(pRegion->arrRangePair[j]);                    
+                            Free(pRegion->arrRangePair[j]);
                     }
                     Free(pRegion->arrRangePair);
-                } 
+                }
                 Free(pRegion);
             }
         }
@@ -45,22 +44,17 @@ void RCDeinit(RegionCollector *self) {
     return;
 }
 
-
-/**
- * RCSelectFeatures() Select the features for n-gram model generation with the specified method.
- */
 int RCSelectFeatures(RegionCollector *self, const char *cszLibName, PEInfo *pPEInfo) {
     int     rc;
     void    *hdleLib;
     char    szLib[BUF_SIZE_SMALL];
     FUNC_PTR_REGION funcEntry;
-    
-    try {
-        rc = 0;
 
+    rc = 0;
+    try {
         /* The default library is "libRegion_MaxEntropySection.so" . */
-        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);        
-        if (cszLibName == NULL) 
+        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);
+        if (cszLibName == NULL)
             sprintf(szLib, "lib%s.so", LIB_DEFAULT_MAX_ENTROPY_SEC);
         else
             sprintf(szLib, "lib%s.so", cszLibName);
@@ -86,4 +80,3 @@ int RCSelectFeatures(RegionCollector *self, const char *cszLibName, PEInfo *pPEI
 
     return rc;
 }
-

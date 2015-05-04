@@ -37,19 +37,19 @@ typedef int (*FUNC_PTR_MODEL)(NGram*, ulong);
 
 
 /* Wrapper for NGram initialization. */
-#define NGram_init(p)       try { \
-                                p = (NGram*)Malloc(sizeof(NGram)); \
-                                NGramInit(p); \
-                            } catch (EXCEPT_MEM_ALLOC) { \
-                                p = NULL; \
+#define NGram_init(p)       try {                                               \
+                                p = (NGram*)Malloc(sizeof(NGram));              \
+                                NGramInit(p);                                   \
+                            } catch (EXCEPT_MEM_ALLOC) {                        \
+                                p = NULL;                                       \
                             } end_try;
 
 
 /* Wrapper for NGram deinitialization. */
-#define NGram_deinit(p)     if (p != NULL) { \
-                                NGramDeinit(p); \
-                                Free(p); \
-                                p = NULL; \
+#define NGram_deinit(p)     if (p != NULL) {                                    \
+                                NGramDeinit(p);                                 \
+                                Free(p);                                        \
+                                p = NULL;                                       \
                             }
 
 
@@ -75,7 +75,7 @@ void NGramSetDimension(NGram *self, uchar ucDimension);
  *
  * @param   self                The pointer to the NGram structure.
  * @param   cszMethod           The string describing the model generation method.
- * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure. 
+ * @param   pPEInfo             The pointer to the to be analyzed PEInfo structure.
  * @param   pRegionCollector    The pointer to the RegionCollector structure which stores all the selected features.
  *
  * @return                      0: The model is generated successfully.

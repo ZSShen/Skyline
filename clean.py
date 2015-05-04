@@ -25,8 +25,6 @@ def main():
             list_clean.append(path_dir);
         elif path_dir.endswith("lib"):
             list_clean.append(path_dir);
-        elif path_dir.endswith("bin"):
-            list_clean.append(path_dir);
         elif path_dir.endswith("export"):
             list_clean.append(path_dir);
     for path_clean in list_clean:

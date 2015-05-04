@@ -29,7 +29,6 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
  *                Implementation for exported functions                      *
  *===========================================================================*/
 void NGramInit(NGram *self) {
-
     /* Initialize member variables. */
     _ucDimension = 0;
     _ulMaxValue = 0;
@@ -40,12 +39,11 @@ void NGramInit(NGram *self) {
 
     /* Assign the default member functions */
     self->setDimension = NGramSetDimension;
-    self->generateModel = NGramGenerateModel;    
+    self->generateModel = NGramGenerateModel;
     self->dump = NGramDump;
 
     return;
 }
-
 
 void NGramDeinit(NGram *self) {
     int     i;
@@ -56,7 +54,7 @@ void NGramDeinit(NGram *self) {
         /* Free the array of Token structures. */
         for (i = 0 ; i < self->ulNumTokens ; i++) {
             pToken = self->arrToken[i];
-            if (pToken != NULL) { 
+            if (pToken != NULL) {
                 Free(pToken);
             }
         }
@@ -77,10 +75,6 @@ void NGramDeinit(NGram *self) {
     return;
 }
 
-
-/**
- * NGramSetDimension(): Set the maximum value of the n-gram token with the specified dimension.
- */
 void NGramSetDimension(NGram *self, uchar ucDimension) {
 
     _ucDimension = ucDimension;
@@ -88,10 +82,6 @@ void NGramSetDimension(NGram *self, uchar ucDimension) {
     return;
 }
 
-
-/**
- * NGramGenerateModel(): Generate the n-gram model based on the specified method.
- */
 int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int     rc;
     void    *hdleLib;
@@ -99,15 +89,15 @@ int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, Reg
     FUNC_PTR_MODEL funcEntry;
 
     /* First, collect tokens from the specified binary regions. */
-    _NGramCollectTokens(self, pPEInfo, pRegionCollector);
+    rc = _NGramCollectTokens(self, pPEInfo, pRegionCollector);
+    if (rc != 0)
+        goto EXIT;
 
     /* Second, generate model using the specified method. */
     try {
-        rc = 0;
-
         /* The default library is "libModel_DescendingFrequency.so" . */
-        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);        
-        if (cszLibName == NULL) 
+        memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);
+        if (cszLibName == NULL)
             sprintf(szLib, "lib%s.so", LIB_DEFAULT_DESC_FREQ);
         else
             sprintf(szLib, "lib%s.so", cszLibName);
@@ -120,7 +110,7 @@ int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, Reg
         funcEntry = NULL;
         funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_MODEL);
 
-        /* Run the plugin. */        
+        /* Run the plugin. */
         rc = funcEntry(self, _ulMaxValue);
     } catch(EXCEPT_DL_LOAD) {
         rc = -1;
@@ -131,15 +121,12 @@ int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, Reg
     if (hdleLib != NULL)
         Dlclose(hdleLib);
 
-    return rc; 
+EXIT:
+    return rc;
 }
 
-
-/**
- * NGramDump(): Dump the information recorded from the generated n-gram tokens.
- */
 void NGramDump(NGram *self) {
-    int     i;    
+    int     i;
     Token   *pToken;
 
     /* Dump the n-gram tokens. */
@@ -156,9 +143,6 @@ void NGramDump(NGram *self) {
 /*===========================================================================*
  *                Implementation for internal functions                      *
  *===========================================================================*/
-/**
- * _NGramCollectTokens(): Collect the n-gram tokens from the specified binary regions.
- */
 int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
     int         rc, i, j, k;
     char        cIdxBitVF, cIdxBitVT, cIdxBitCur;
@@ -185,28 +169,27 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
             self->arrToken[i] = NULL;
 
         usShiftPos = _ucDimension * SHIFT_RANGE_8BIT;
-        
+
         for (i = 0 ; i < usNumRegions ; i++) {
-            
             /* Collect the n-gram tokens block by block within the current region(section). */
             pRegion = pRegionCollector->arrRegion[i];
             usIdxSection = pRegion->usIdxSection;
             ulSecRawSize = pPEInfo->arrSectionInfo[usIdxSection]->ulRawSize;
             ulSecRawOffset = pPEInfo->arrSectionInfo[usIdxSection]->ulRawOffset;
-            
+
             arrRangePair = pRegion->arrRangePair;
             for (j = 0 ; j < pRegion->ulNumPairs ; j++) {
                 ulIdxBgn = arrRangePair[j]->ulIdxBgn;
-                ulIdxEnd = arrRangePair[j]->ulIdxEnd;                
-                
+                ulIdxEnd = arrRangePair[j]->ulIdxEnd;
+
                 /* Transform the data block index to the raw binary offset. */
                 ulOstBgn = ulSecRawOffset + ulIdxBgn * ENTROPY_BLK_SIZE;
                 ulOstEnd = ulSecRawOffset + ulIdxEnd * ENTROPY_BLK_SIZE;
                 ulRegionSize = ulOstEnd - ulOstBgn;
 
-                //----------------------------------------------------
-                // Main algorithm for the n-gram token collection.
-                //----------------------------------------------------
+                /*---------------------------------------------------*
+                 * Main algorithm for the n-gram token collection.   *
+                 *---------------------------------------------------*/
                 /* Preload a chunk of binary. */
                 Fseek(pPEInfo->fpSample, ulOstBgn, SEEK_SET);
                 nExptRead = (ulRegionSize < BUF_SIZE_LARGE)? ulRegionSize : BUF_SIZE_LARGE;
@@ -218,7 +201,6 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
                 cIdxBitVF = 0;
                 cIdxBitVT = BIT_MOST_SIGNIFICANT;
                 while (true) {
-
                     /* Generate token using the binary within the sliding window. */
                     cIdxBitCur = cIdxBitVT;
                     ulIdxByteCur = ulIdxByteVT;
@@ -228,7 +210,7 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
                         ucMask <<= cIdxBitCur;
                         ucBitVal = buf[ulIdxByteCur] & ucMask;
                         ucBitVal >>= cIdxBitCur;
-                        ulTokenVal = (ulTokenVal << 1) + ucBitVal; 
+                        ulTokenVal = (ulTokenVal << 1) + ucBitVal;
 
                         cIdxBitCur--;
                         if (cIdxBitCur < 0) {
@@ -254,7 +236,7 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
                     cIdxBitVF--;
                     if(cIdxBitVF < 0) {
                         cIdxBitVF = BIT_MOST_SIGNIFICANT;
-                        
+
                         /* Check the condition to terminate the algorithm. */
                         ulIdxByteRF++;
                         if(ulIdxByteRF == ulRegionSize)
@@ -264,24 +246,24 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
                         if(ulIdxByteVF == BUF_SIZE_LARGE) {
                             ulIdxByteVF = 0;
 
-                            /* Put a new chunk of data to the buffer with offset 
+                            /* Put a new chunk of data to the buffer with offset
                                from 0 to (nExptRead - 1). */
                             nExptRead = BUF_SIZE_LARGE - _ucDimension;
                             if (nExptRead > (ulRegionSize - ulIdxByteRF))
                                 nExptRead = ulRegionSize - ulIdxByteRF;
                             nRealRead = Fread(buf, sizeof(uchar), nExptRead, pPEInfo->fpSample);
-                        }        
+                        }
                     }
-                    
+
                     /* Adjust the tail-end location pointer. */
                     cIdxBitVT--;
                     if(cIdxBitVT < 0) {
                         cIdxBitVT = BIT_MOST_SIGNIFICANT;
-                        
+
                         ulIdxByteVT++;
                         if(ulIdxByteVT == BUF_SIZE_LARGE) {
                             ulIdxByteVT = 0;
-                            
+
                             /* Put a new chunk of data to the buffer with offset
                                from (BUF_SIZE_LARGE - _ucDimension) to (BUF_SIZE_LARGE - 1 - _ucDimension + nExptRead). */
                             nExptRead = _ucDimension;
@@ -296,13 +278,13 @@ int _NGramCollectTokens(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCo
             /* End of one section. */
         }
     } catch(EXCEPT_MEM_ALLOC) {
-        rc = -1;        
+        rc = -1;
     } catch(EXCEPT_IO_FILE_READ) {
         rc = -1;
     } catch(EXCEPT_IO_FILE_SEEK) {
         rc = -1;
     } end_try;
 
-EXIT:    
-    return rc;       
+EXIT:
+    return rc;
 }
