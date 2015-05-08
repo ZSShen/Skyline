@@ -6,12 +6,20 @@
 #include "report.h"
 
 
+typedef struct _Opt {
+    const char *cszInput;
+    const char *cszOutput;
+    const char *cszLibRegion;
+    const char *cszLibModel;
+    uchar ucDimension;
+} Opt;
+
+
 /* Print the program usage message. */
 void print_usage();
 
 /* Initialize the primary worker modules. */
-int init_modules(PEInfo**, RegionCollector**, NGram**, Report**, const char*,
-                 const char*);
+int init_modules(PEInfo**, RegionCollector**, NGram**, Report**, Opt*);
 
 /* Deinitialize the primary worker modules. */
 int deinit_modules(PEInfo*, RegionCollector*, NGram*, Report*);
@@ -39,6 +47,7 @@ int main(int argc, char **argv, char **envp) {
     NGram           *pNGram;
     Report          *pReport;
     char            szOrder[BUF_SIZE_SMALL];
+    Opt             bundleOpt;
 
     /* Craft the structure to store command line options. */
     static struct option Options[] = {
@@ -142,8 +151,13 @@ int main(int argc, char **argv, char **envp) {
         goto EXIT;
     }
 
-    rc = init_modules(&pPEInfo, &pRegionCollector, &pNGram, &pReport, cszLibRegion,
-                      cszLibModel);
+    bundleOpt.ucDimension = ucDimension;
+    bundleOpt.cszInput = cszInput;
+    bundleOpt.cszOutput = cszOutput;
+    bundleOpt.cszLibRegion = cszLibRegion;
+    bundleOpt.cszLibModel = cszLibModel;
+
+    rc = init_modules(&pPEInfo, &pRegionCollector, &pNGram, &pReport, &bundleOpt);
     if (rc != 0)
         goto DEINIT;
 
@@ -196,8 +210,7 @@ void print_usage() {
 
 
 int init_modules(PEInfo **ppPEInfo, RegionCollector **ppRegionCollector,
-                 NGram **ppNGram, Report **ppReport, const char *cszNameRegion,
-                 const char *cszNameModel) {
+                 NGram **ppNGram, Report **ppReport, Opt *pOpt) {
     int rc;
 
     rc = 0;
@@ -222,10 +235,13 @@ int init_modules(PEInfo **ppPEInfo, RegionCollector **ppRegionCollector,
         goto EXIT;
     }
 
-    rc = (*ppRegionCollector)->loadPlugin(*ppRegionCollector, cszNameRegion);
+    rc = (*ppRegionCollector)->loadPlugin(*ppRegionCollector, pOpt->cszLibRegion);
     if (rc != 0)
         goto EXIT;
-    rc = (*ppNGram)->loadPlugin(*ppNGram, cszNameModel);
+    rc = (*ppNGram)->loadPlugin(*ppNGram, pOpt->cszLibModel);
+    if (rc != 0)
+        goto EXIT;
+    rc = (*ppReport)->generateFolder(*ppReport, pOpt->cszOutput);
 
 EXIT:
     return rc;
@@ -293,11 +309,6 @@ int generate_report(Report *pReport, PEInfo *pPEInfo, NGram *pNGram, const char 
 
     /* Retrieve the sample name. */
     cszSampleName = pPEInfo->szSampleName;
-
-    /* Generate the report folder. */
-    rc = pReport->generateFolder(pReport, cszOutDir);
-    if (rc != 0)
-        goto EXIT;
 
     /* Generate the entropy distribution report. */
     if (uiMask & MASK_REPORT_SECTION_ENTROPY) {

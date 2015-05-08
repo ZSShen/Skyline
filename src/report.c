@@ -32,27 +32,25 @@ int ReportGenerateFolder(Report *self, const char *cszDirPath) {
             dir = NULL;
             state = Mkdir(cszDirPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-            /* The folder already exists and we should remove all the files residing in it. */
+            /* The folder already exists and we should remove all the files in it. */
             if (state != 0) {
                 dir = Opendir(cszDirPath);
-                if (dir != NULL) {
-                    iLenPath = strlen(cszDirPath);
-                    memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
-                    strcpy(szPathReport, cszDirPath);
+                iLenPath = strlen(cszDirPath);
+                memset(szPathReport, 0, sizeof(char) * (BUF_SIZE_MID + 1));
+                strcpy(szPathReport, cszDirPath);
 
-                    if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
-                        szPathReport[iLenPath] = OS_PATH_SEPARATOR;
-                        iLenPath++;
-                    }
+                if (cszDirPath[iLenPath - 1] != OS_PATH_SEPARATOR) {
+                    szPathReport[iLenPath] = OS_PATH_SEPARATOR;
+                    iLenPath++;
+                }
 
-                    while ((entry = Readdir(dir)) != NULL) {
-                        if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0))
-                            continue;
-                        strcpy(szPathReport + iLenPath, entry->d_name);
-                        Unlink(szPathReport);
-                        iLenRest = strlen(entry->d_name);
-                        memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest);
-                    }
+                while ((entry = Readdir(dir)) != NULL) {
+                    if ((strcmp(entry->d_name, ".") == 0) || (strcmp(entry->d_name, "..") == 0))
+                        continue;
+                    strcpy(szPathReport + iLenPath, entry->d_name);
+                    Unlink(szPathReport);
+                    iLenRest = strlen(entry->d_name);
+                    memset(szPathReport + iLenPath, 0, sizeof(char) * iLenRest);
                 }
             }
         #endif
