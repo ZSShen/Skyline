@@ -87,7 +87,7 @@ int NGramLoadPlugin(NGram *self, const char *cszName) {
     try {
         memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);
         if (cszName == NULL)
-            sprintf(szLib, "../../plugin/release/lib%s.so", LIB_DEFAULT_DESC_FREQ);
+            sprintf(szLib, "lib%s.so", LIB_DEFAULT_DESC_FREQ);
         else
             sprintf(szLib, "lib%s.so", cszName);
 

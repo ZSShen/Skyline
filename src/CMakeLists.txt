@@ -29,7 +29,6 @@ set(PATH_BIN_PLG "${PATH_BIN}/plugin")
 # For plugins, we build them as dynamically loadable module.
 set(LIB_TYPE "MODULE")
 
-set(CMAKE_VERBOSE_MAKEFILE on)
 
 #==================================================================#
 #                The subroutines for specific task                 #
@@ -61,19 +60,20 @@ function(SUB_BUILD_ENGINE)
     endif()
 
     # Set the default plugin search path.
-    #set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath,${PATH_PLG_SEARCH},--enable_new-dtags")
-    #add_definitions("-Wl,-rpath,\$ORIGIN")
+    set(DT_RUNPATH "-Wl,-rpath,${PATH_PLG_SEARCH},--enable-new-dtags")
 
     # Build the engine executable.
     add_executable(${TGE_PENGRAM}
         ${SRC_MAIN} ${SRC_PE} ${SRC_RGN} ${SRC_NGRAM} ${SRC_RPT} ${SRC_UTIL} ${SRC_EXPT}
     )
     target_link_libraries(${TGE_PENGRAM}
-        ${IMPORT_CONFIG} ${IMPORT_DL} ${IMPORT_MATH})
+        ${IMPORT_CONFIG} ${IMPORT_DL} ${IMPORT_MATH}
+    )
 
     set_target_properties( ${TGE_PENGRAM} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${PATH_OUT}
         OUTPUT_NAME ${OUT_PENGRAM}
+        LINK_FLAGS ${DT_RUNPATH}
     )
 endfunction()
 
