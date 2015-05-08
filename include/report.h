@@ -15,19 +15,19 @@ typedef struct _Report {
 
 
 /* Wrapper for Report structure initialization. */
-#define Report_init(p)          try { \
-                                    p = (Report*)Malloc(sizeof(Report)); \
-                                    ReportInit(p); \
-                                } catch (EXCEPT_MEM_ALLOC) { \
-                                    p = NULL; \
+#define Report_init(p)          try {                                           \
+                                    p = (Report*)Malloc(sizeof(Report));        \
+                                    ReportInit(p);                              \
+                                } catch (EXCEPT_MEM_ALLOC) {                    \
+                                    p = NULL;                                   \
                                 } end_try;
 
 
 /* Wrapper for Report structure deinitialization. */
-#define Report_deinit(p)        if (p != NULL) { \
-                                    ReportDeinit(p); \
-                                    Free(p); \
-                                    p = NULL; \
+#define Report_deinit(p)        if (p != NULL) {                                \
+                                    ReportDeinit(p);                            \
+                                    Free(p);                                    \
+                                    p = NULL;                                   \
                                 }
 
 
@@ -68,7 +68,7 @@ int ReportLogEntropyDistribution(Report *self, PEInfo *pPEInfo, const char *cszD
 
 /**
  * This function logs the full n-gram model.
- * 
+ *
  * @param   self            The pointer to the Report structure.
  * @param   pNGram          The pointer to the NGram structure.
  * @param   cszDirPath      The path to the output folder.

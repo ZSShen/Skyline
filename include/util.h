@@ -178,9 +178,9 @@ typedef unsigned long   ulong;
 
 /**
  * This function print the designated log message.
- * 
- * @param   cszPathCode     The path of the source code. 
- * @param   iLineNo         The line number of the statement. 
+ *
+ * @param   cszPathCode     The path of the source code.
+ * @param   iLineNo         The line number of the statement.
  * @param   cszFunc         The name of the function.
  * @param   cszFormat       The string format of the log message.
  */
@@ -227,7 +227,7 @@ int FileClose(FILE*);
 #if defined(_WIN32)
 
 #elif defined(__linux__)
-    void* DLLoad(const char*, int, const char*, const int, const char*);  
+    void* DLLoad(const char*, int, const char*, const int, const char*);
     void* DLGetSymbol(void*, const char*, const char*, const int, const char*);
     void* DLFree(void*, const char*, const int, const char*);
 #endif

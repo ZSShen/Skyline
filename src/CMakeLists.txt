@@ -29,6 +29,7 @@ set(PATH_BIN_PLG "${PATH_BIN}/plugin")
 # For plugins, we build them as dynamically loadable module.
 set(LIB_TYPE "MODULE")
 
+set(CMAKE_VERBOSE_MAKEFILE on)
 
 #==================================================================#
 #                The subroutines for specific task                 #
@@ -50,12 +51,18 @@ function(SUB_BUILD_ENGINE)
     # Determine the build type.
     if (CMAKE_BUILD_TYPE STREQUAL OPT_BUILD_DBG)
         set(PATH_OUT "${PATH_BIN_ENG}/debug")
+        set(PATH_PLG_SEARCH "${PATH_BIN_PLG}/debug")
     elseif (CMAKE_BUILD_TYPE STREQUAL OPT_BUILD_REL)
         set(PATH_OUT "${PATH_BIN_ENG}/release")
+        set(PATH_PLG_SEARCH "${PATH_BIN_PLG}/release")
     else()
         message("${RED}-- Error: CMAKE_BUILD_TYPE is not properly specified.${RESET}")
         return()
     endif()
+
+    # Set the default plugin search path.
+    #set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath,${PATH_PLG_SEARCH},--enable_new-dtags")
+    #add_definitions("-Wl,-rpath,\$ORIGIN")
 
     # Build the engine executable.
     add_executable(${TGE_PENGRAM}

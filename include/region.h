@@ -25,12 +25,13 @@ typedef struct _RegionCollector {
     ushort  usNumRegions;
     Region  **arrRegion;
 
-    int (*selectFeatures) (struct _RegionCollector*, const char*, PEInfo*);
+    void *hdlePlug;
+    int (*entryPlug) (struct _RegionCollector*, PEInfo*);
+
+    int (*selectFeatures) (struct _RegionCollector*, PEInfo*);
+    int (*loadPlugin) (struct _RegionCollector*, const char*);
+    int (*unloadPlugin) (struct _RegionCollector*);
 } RegionCollector;
-
-
-/* The function pointer type of the plugin entry point. */
-typedef int(*FUNC_PTR_REGION) (RegionCollector*, PEInfo*);
 
 
 /* Wrapper for RegionCollector initialization. */
@@ -59,16 +60,37 @@ void RCDeinit(RegionCollector *self);
 
 
 /**
+ * This function loads the region collector plugin.
+ *
+ * @param   self        The pointer to the RegionCollector structure.
+ * @param   cszName     The plugin name.
+ *
+ * @return              0: The plugin is loaded successfully.
+ *                    < 0: The plugin cannot be loaded.
+ */
+int RCLoadPlugin(RegionCollector *self, const char *cszName);
+
+
+/**
+ * This function unloads the region collector plugin.
+ *
+ * @param   self        The pointer to the RegionCollector structure.
+ * @return              0: The plugin is unloaded successfully.
+ *                    < 0: The plugin cannot be unloaded.
+ */
+int RCUnloadPlugin(RegionCollector *self);
+
+
+/**
  * This function selects the features for n-gram model generation based on the specified method.
  *
  * @param   self        The pointer to the RegionCollector structure.
- * @param   cszMethod   The string describing the feature selection method.
  * @param   pPEInfo     The pointer to the to be analyzed PEInfo structure.
  *
  * @return              0: The features are collected successfully.
  *                    < 0: Exception occurs while memory allocation.
  */
-int RCSelectFeatures(RegionCollector *self, const char *cszMethod, PEInfo *pPEInfo);
+int RCSelectFeatures(RegionCollector *self, PEInfo *pPEInfo);
 
 
 #endif

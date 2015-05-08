@@ -2,7 +2,6 @@
 
 
 void PEInfoInit(PEInfo *self) {
-
     self->szSampleName = NULL;
     self->fpSample = NULL;
     self->pPEHeader = NULL;
@@ -16,7 +15,6 @@ void PEInfoInit(PEInfo *self) {
 
     return;
 }
-
 
 void PEInfoDeinit(PEInfo *self) {
     int  i;

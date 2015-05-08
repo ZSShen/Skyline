@@ -5,25 +5,28 @@
 #include "ngram.h"
 #include "report.h"
 
+
 /* Print the program usage message. */
 void print_usage();
 
+/* Initialize the primary worker modules. */
+int init_modules(PEInfo**, RegionCollector**, NGram**, Report**, const char*,
+                 const char*);
 
-/* Bundle operations to manipulate PEInfo structure and parse input sample. */
-int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput);
+/* Deinitialize the primary worker modules. */
+int deinit_modules(PEInfo*, RegionCollector*, NGram*, Report*);
 
+/* Bundle the operations to parse input PE file. */
+int parse_pe_info(PEInfo*, const char*);
 
-/* Bundle operations to manipulate RegionCollector structure and select the user-specified features. */
-int select_features(RegionCollector **ppRegionCollector, const char *cszLibName, PEInfo *pPEInfo);
+/* Bundle the operations to select the user-specified binary characteristics. */
+int select_features(RegionCollector*, PEInfo*);
 
+/* Bundle the operations to generate the user-specified model. */
+int generate_model(NGram*, uchar, PEInfo*, RegionCollector*);
 
-/* Bundle operations to manipulate NGram structure and generate the user-specified model. */
-int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension,
-                    PEInfo *pPEInfo, RegionCollector *pRegionCollector);
-
-
-/* Bundle operations to manipulate Report structure and generate the relevant reports. */
-int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask);
+/* Bundle the operations to generate the reports. */
+int generate_report(Report*, PEInfo*, NGram*, const char*, uint);
 
 
 int main(int argc, char **argv, char **envp) {
@@ -139,38 +142,31 @@ int main(int argc, char **argv, char **envp) {
         goto EXIT;
     }
 
-    /* Prepare the basic PE features. */
-    rc = parse_pe_info(&pPEInfo, cszInput);
+    rc = init_modules(&pPEInfo, &pRegionCollector, &pNGram, &pReport, cszLibRegion,
+                      cszLibModel);
     if (rc != 0)
-        goto FREE_PE;
+        goto DEINIT;
+
+    /* Prepare the basic PE features. */
+    rc = parse_pe_info(pPEInfo, cszInput);
+    if (rc != 0)
+        goto DEINIT;
 
     /* Select the features for n-gram model generation. */
-    rc = select_features(&pRegionCollector, cszLibRegion, pPEInfo);
+    rc = select_features(pRegionCollector, pPEInfo);
     if (rc != 0)
-        goto FREE_RC;
+        goto DEINIT;
 
     /* Generate the model with the selected features. */
-    rc = generate_model(&pNGram, cszLibModel, ucDimension, pPEInfo, pRegionCollector);
+    rc = generate_model(pNGram, ucDimension, pPEInfo, pRegionCollector);
     if (rc != 0)
-        goto FREE_NG;
+        goto DEINIT;
 
     /* Generate the relevant reports for the model. */
-    rc = generate_report(&pReport, pPEInfo, pNGram, cszOutput, uiMask);
+    rc = generate_report(pReport, pPEInfo, pNGram, cszOutput, uiMask);
 
-    /* Deinitialize the Report structure*/
-    Report_deinit(pReport);
-
-    /* Deinitialize the NGram structure. */
-FREE_NG:
-    NGram_deinit(pNGram);
-
-    /* Deinitialize the RegionCollector structure. */
-FREE_RC:
-    RegionCollector_deinit(pRegionCollector);
-
-    /* Deinitialize the PEInfo structure. */
-FREE_PE:
-    PEInfo_deinit(pPEInfo);
+DEINIT:
+    deinit_modules(pPEInfo, pRegionCollector, pNGram, pReport);
 
 EXIT:
     return rc;
@@ -199,19 +195,63 @@ void print_usage() {
 }
 
 
-int parse_pe_info(PEInfo **ppPEInfo, const char *cszInput) {
-    int     rc;
-    PEInfo  *pPEInfo;
+int init_modules(PEInfo **ppPEInfo, RegionCollector **ppRegionCollector,
+                 NGram **ppNGram, Report **ppReport, const char *cszNameRegion,
+                 const char *cszNameModel) {
+    int rc;
 
-    /* Initialize the PEInfo structure. */
     rc = 0;
     PEInfo_init(*ppPEInfo);
     if (*ppPEInfo == NULL) {
         rc = -1;
         goto EXIT;
     }
+    RegionCollector_init(*ppRegionCollector);
+    if (*ppRegionCollector == NULL) {
+        rc = -1;
+        goto EXIT;
+    }
+    NGram_init(*ppNGram);
+    if (*ppNGram == NULL) {
+        rc = -1;
+        goto EXIT;
+    }
+    Report_init(*ppReport);
+    if (*ppReport == NULL) {
+        rc = -1;
+        goto EXIT;
+    }
 
-    pPEInfo = *ppPEInfo;
+    rc = (*ppRegionCollector)->loadPlugin(*ppRegionCollector, cszNameRegion);
+    if (rc != 0)
+        goto EXIT;
+    rc = (*ppNGram)->loadPlugin(*ppNGram, cszNameModel);
+
+EXIT:
+    return rc;
+}
+
+
+int deinit_modules(PEInfo *pPEInfo, RegionCollector *pRegionCollector,
+                   NGram *pNGram, Report *pReport) {
+    if (pPEInfo != NULL)
+        PEInfo_deinit(pPEInfo);
+    if (pRegionCollector != NULL) {
+        pRegionCollector->unloadPlugin(pRegionCollector);
+        RegionCollector_deinit(pRegionCollector);
+    }
+    if (pNGram != NULL) {
+        pNGram->unloadPlugin(pNGram);
+        NGram_deinit(pNGram);
+    }
+    if (pReport != NULL)
+        Report_deinit(pReport);
+    return 0;
+}
+
+
+int parse_pe_info(PEInfo *pPEInfo, const char *cszInput) {
+    int rc;
 
     /* Open the input sample for analysis. */
     rc = pPEInfo->openSample(pPEInfo, cszInput);
@@ -233,91 +273,52 @@ EXIT:
 }
 
 
-int select_features(RegionCollector **ppRegionCollector, const char *cszLibName, PEInfo *pPEInfo) {
-    int     rc;
-    RegionCollector *pRegionCollector;
-
-    /* Initialize the RegionCollector structure. */
-    rc = 0;
-    RegionCollector_init(*ppRegionCollector);
-    if (*ppRegionCollector != NULL) {
-        pRegionCollector = *ppRegionCollector;
-
-        /* Select the features. */
-        rc = pRegionCollector->selectFeatures(pRegionCollector, cszLibName, pPEInfo);
-    } else
-        rc = -1;
-
-    return rc;
+int select_features(RegionCollector *pRegionCollector, PEInfo *pPEInfo) {
+    return pRegionCollector->selectFeatures(pRegionCollector, pPEInfo);
 }
 
 
-int generate_model(NGram **ppNGram, const char *cszLibName, uchar ucDimension,
-                    PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
-    int     rc;
-    NGram   *pNGram;
-
-    /* Initialize the NGram structure. */
-    rc = 0;
-    NGram_init(*ppNGram);
-
-    if (*ppNGram != NULL) {
-        pNGram = *ppNGram;
-
-        /* Set the maximum value of a n-gram token. */
-        pNGram->setDimension(pNGram, ucDimension);
-
-        /* Generate the model. */
-        rc = pNGram->generateModel(pNGram, cszLibName, pPEInfo, pRegionCollector);
-    } else
-        rc = -1;
-
-    return rc;
+int generate_model(NGram *pNGram, uchar ucDimension, PEInfo *pPEInfo,
+                   RegionCollector *pRegionCollector) {
+    /* Set the maximum value of a n-gram token. */
+    pNGram->setDimension(pNGram, ucDimension);
+    /* Generate the model. */
+    return pNGram->generateModel(pNGram, pPEInfo, pRegionCollector);
 }
 
 
-int generate_report(Report **ppReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask) {
-    int        rc;
+int generate_report(Report *pReport, PEInfo *pPEInfo, NGram *pNGram, const char *cszOutDir, uint uiMask) {
+    int rc;
     const char *cszSampleName;
-    Report     *pReport;
 
-    /* Initialize the Report structure. */
-    rc = 0;
-    Report_init(*ppReport);
+    /* Retrieve the sample name. */
+    cszSampleName = pPEInfo->szSampleName;
 
-    if (*ppReport != NULL) {
-        pReport = *ppReport;
+    /* Generate the report folder. */
+    rc = pReport->generateFolder(pReport, cszOutDir);
+    if (rc != 0)
+        goto EXIT;
 
-        /* Retrieve the sample name. */
-        cszSampleName = pPEInfo->szSampleName;
-
-        /* Generate the report folder. */
-        rc = pReport->generateFolder(pReport, cszOutDir);
+    /* Generate the entropy distribution report. */
+    if (uiMask & MASK_REPORT_SECTION_ENTROPY) {
+        rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
         if (rc != 0)
             goto EXIT;
+    }
 
-        /* Generate the entropy distribution report. */
-        if (uiMask & MASK_REPORT_SECTION_ENTROPY) {
-            rc = pReport->logEntropyDistribution(pReport, pPEInfo, cszOutDir, cszSampleName);
-            if (rc != 0)
-                goto EXIT;
-        }
+    /* Generate the full n-gram model report. */
+    if (uiMask & MASK_REPORT_TXT_NGRAM) {
+        rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+        if (rc != 0)
+            goto EXIT;
+    }
 
-        /* Generate the full n-gram model report. */
-        if (uiMask & MASK_REPORT_TXT_NGRAM) {
-            rc = pReport->logNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
-            if (rc != 0)
-                goto EXIT;
-        }
-
-        /* Generate the visualized n-gram model. */
-        if (uiMask & MASK_REPORT_PNG_NGRAM) {
-            rc = pReport->plotNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
-            if (rc != 0)
-                goto EXIT;
-        }
-    } else
-        rc = -1;
+    /* Generate the visualized n-gram model. */
+    if (uiMask & MASK_REPORT_PNG_NGRAM) {
+        rc = pReport->plotNGramModel(pReport, pNGram, cszOutDir, cszSampleName);
+        if (rc != 0)
+            goto EXIT;
+    }
 
 EXIT:
     return rc;

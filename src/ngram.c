@@ -36,8 +36,12 @@ void NGramInit(NGram *self) {
     self->ulNumSlices = 0;
     self->arrToken = NULL;
     self->arrSlice = NULL;
+    self->hdlePlug = NULL;
+    self->entryPlug = NULL;
 
     /* Assign the default member functions */
+    self->loadPlugin = NGramLoadPlugin;
+    self->unloadPlugin = NGramUnloadPlugin;
     self->setDimension = NGramSetDimension;
     self->generateModel = NGramGenerateModel;
     self->dump = NGramDump;
@@ -75,54 +79,49 @@ void NGramDeinit(NGram *self) {
     return;
 }
 
-void NGramSetDimension(NGram *self, uchar ucDimension) {
+int NGramLoadPlugin(NGram *self, const char *cszName) {
+    int rc;
+    char szLib[BUF_SIZE_SMALL];
 
-    _ucDimension = ucDimension;
-    _ulMaxValue = pow(UNI_GRAM_MAX_VALUE, ucDimension);
-    return;
-}
-
-int NGramGenerateModel(NGram *self, const char *cszLibName, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
-    int     rc;
-    void    *hdleLib;
-    char    szLib[BUF_SIZE_SMALL];
-    FUNC_PTR_MODEL funcEntry;
-
-    /* First, collect tokens from the specified binary regions. */
-    rc = _NGramCollectTokens(self, pPEInfo, pRegionCollector);
-    if (rc != 0)
-        goto EXIT;
-
-    /* Second, generate model using the specified method. */
+    rc = 0;
     try {
-        /* The default library is "libModel_DescendingFrequency.so" . */
         memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);
-        if (cszLibName == NULL)
-            sprintf(szLib, "lib%s.so", LIB_DEFAULT_DESC_FREQ);
+        if (cszName == NULL)
+            sprintf(szLib, "../../plugin/release/lib%s.so", LIB_DEFAULT_DESC_FREQ);
         else
-            sprintf(szLib, "lib%s.so", cszLibName);
+            sprintf(szLib, "lib%s.so", cszName);
 
-        /* Load the plugin. */
-        hdleLib = NULL;
-        hdleLib = Dlopen(szLib, RTLD_LAZY);
-
-        /* Get the plugin entry point. */
-        funcEntry = NULL;
-        funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_MODEL);
-
-        /* Run the plugin. */
-        rc = funcEntry(self, _ulMaxValue);
+        self->hdlePlug = Dlopen(szLib, RTLD_LAZY);
+        self->entryPlug = Dlsym(self->hdlePlug, PLUGIN_ENTRY_MODEL);
     } catch(EXCEPT_DL_LOAD) {
         rc = -1;
     } catch(EXCEPT_DL_GET_SYMBOL) {
         rc = -1;
     } end_try;
 
-    if (hdleLib != NULL)
-        Dlclose(hdleLib);
-
-EXIT:
     return rc;
+}
+
+int NGramUnloadPlugin(NGram *self) {
+    if (self->hdlePlug != NULL)
+        Dlclose(self->hdlePlug);
+    return 0;
+}
+
+void NGramSetDimension(NGram *self, uchar ucDimension) {
+    _ucDimension = ucDimension;
+    _ulMaxValue = pow(UNI_GRAM_MAX_VALUE, ucDimension);
+    return;
+}
+
+int NGramGenerateModel(NGram *self, PEInfo *pPEInfo, RegionCollector *pRegionCollector) {
+    /* First, collect tokens from the specified binary regions. */
+    int rc = _NGramCollectTokens(self, pPEInfo, pRegionCollector);
+    if (rc != 0)
+        return rc;
+
+    /* Second, generate model using the specified method. */
+    return self->entryPlug(self, _ulMaxValue);
 }
 
 void NGramDump(NGram *self) {

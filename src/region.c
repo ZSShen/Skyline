@@ -8,8 +8,12 @@ void RCInit(RegionCollector *self) {
     /* Initialize member variables. */
     self->usNumRegions = 0;
     self->arrRegion = NULL;
+    self->hdlePlug = NULL;
+    self->entryPlug = NULL;
 
     /* Assign the default member functions. */
+    self->loadPlugin = RCLoadPlugin;
+    self->unloadPlugin = RCUnloadPlugin;
     self->selectFeatures = RCSelectFeatures;
 
     return;
@@ -44,39 +48,35 @@ void RCDeinit(RegionCollector *self) {
     return;
 }
 
-int RCSelectFeatures(RegionCollector *self, const char *cszLibName, PEInfo *pPEInfo) {
-    int     rc;
-    void    *hdleLib;
-    char    szLib[BUF_SIZE_SMALL];
-    FUNC_PTR_REGION funcEntry;
+int RCLoadPlugin(RegionCollector *self, const char *cszName) {
+    int rc;
+    char szLib[BUF_SIZE_SMALL];
 
     rc = 0;
     try {
-        /* The default library is "libRegion_MaxEntropySection.so" . */
         memset(szLib, 0, sizeof(char) * BUF_SIZE_SMALL);
-        if (cszLibName == NULL)
-            sprintf(szLib, "lib%s.so", LIB_DEFAULT_MAX_ENTROPY_SEC);
+        if (cszName == NULL)
+            sprintf(szLib, "../../plugin/release/lib%s.so", LIB_DEFAULT_MAX_ENTROPY_SEC);
         else
-            sprintf(szLib, "lib%s.so", cszLibName);
+            sprintf(szLib, "lib%s.so", cszName);
 
-        /* Load the plugin. */
-        hdleLib = NULL;
-        hdleLib = Dlopen(szLib, RTLD_LAZY);
-
-        /* Get the plugin entry point. */
-        funcEntry = NULL;
-        funcEntry = Dlsym(hdleLib, PLUGIN_ENTRY_REGION);
-
-        /* Run the plugin. */
-        rc = funcEntry(self, pPEInfo);
+        self->hdlePlug = Dlopen(szLib, RTLD_LAZY);
+        self->entryPlug = Dlsym(self->hdlePlug, PLUGIN_ENTRY_REGION);
     } catch(EXCEPT_DL_LOAD) {
         rc = -1;
     } catch(EXCEPT_DL_GET_SYMBOL) {
         rc = -1;
     } end_try;
 
-    if (hdleLib != NULL)
-        Dlclose(hdleLib);
-
     return rc;
+}
+
+int RCUnloadPlugin(RegionCollector *self) {
+    if (self->hdlePlug != NULL)
+        Dlclose(self->hdlePlug);
+    return 0;
+}
+
+int RCSelectFeatures(RegionCollector *self, PEInfo *pPEInfo) {
+    return self->entryPlug(self, pPEInfo);
 }
