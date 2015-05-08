@@ -2,7 +2,7 @@ language: c
 
 compiler:
     - gcc
-    
+
 git:
   depth: 1
 
@@ -14,9 +14,11 @@ install:
     - sudo apt-get install -qq gnuplot
 
 script:
-    - cd PE-NGram-Distribution/
-    - make executable DEBUG=true COVERAGE=true
-    - make coverage DEBUG=true
+    - ./clean.py --rebuild
+    - cd build
+    - cmake ..
+    - make
+    - make run
 
 after_success:
     - coveralls
