@@ -82,6 +82,14 @@ or
 $ ./pe_ngram -i ~/mybin/a.exe -o ~/mybin/a -d 2 --t eti
 ```
 
+##Demo
+| PE Binary Description    | N-Gram Distribution Model           |
+| ------------- | ------------- |
+| 32bit notepad.exe | <img src="https://raw.githubusercontent.com/ZSShen/PE-NGram-Analysis/master/res/picture/Fsg_Notepad_ngram_model.png" width="460px" height="350px"/> |
+| UPX-protected notepad.exe| <img src="https://raw.githubusercontent.com/ZSShen/PE-NGram-Analysis/master/res/picture/UPX_Notepad_ngram_model.png" width="440px" height="350px"/> |
+| RLPack-protected notepad.exe | <img src="https://raw.githubusercontent.com/ZSShen/PE-NGram-Analysis/master/res/picture/RLPack_Notepad_ngram_model.png" width="440px" height="350px"/> |
+| Fsg-protected notepad.exe | <img src="https://raw.githubusercontent.com/ZSShen/PE-NGram-Analysis/master/res/picture/Fsg_Notepad_ngram_model.png" width="440px" height="350px"/> |
+
 ##Reference
 + The project is inspired by the research paper from G.Jacob et. al.
   [A Static, Packer-Agnostic Filter to Detect Similar Malware Samples]
