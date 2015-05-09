@@ -73,7 +73,7 @@ def main():
             proc.wait();
 
     # Clean the folder.
-    shutil.rmtree(path_case);
+    #shutil.rmtree(path_case);
 
     return;
 
