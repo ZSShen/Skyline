@@ -35,10 +35,10 @@ And the assistent plugins should be under:
 - `./bin/plugin/release/libModel_*.so`
 
 ####***Advanced***
-If we patch the main engine or the assistent plugins, we can apply CMake to configure the building procedures resprectively with the following parameters:  
+If we patch the main engine or the assistent plugins, we can apply CMake to configure the building procedures resprectively with the following arguments:  
 - `BUILD_TARGET`  
-  + Engine - Set the building procedure for main engine only. Root output folder is `./bin/engine`.
-  + Plugin - Set the buliding procedure for assistent plugins only. Root output folder is `./bin/plugin`.
+  + Engine - To build main engine only. Root output folder is `./bin/engine`.
+  + Plugin - To build assistent plugins only. Root output folder is `./bin/plugin`.
 - `CMAKE_BUILD_TYPE`
   + Release - For performance optimized binary. Root output folder is `./bin/.*/release`.
   + Debug - For debug information added binary. Root output folder is `./bin/.*/debug`.
@@ -54,10 +54,33 @@ $ make
 $ cmake .. --DBUILD_TARGET=Plugin  --DCMAKE_BUILD_TYPE=Release
 $ make
 ```
-Note that if we do not specifiy the `BUILD_TARGET` parameter, both the building procedures for engine and plugins are prepared. And if we do not specify the `CMAKE_BUILD_TYPE` parameter, the release version for optimized binaries will be generated.
+Note that if we do not specifiy the `BUILD_TARGET` argument, the building procedures for engine and plugins are both prepared. And if we do not specify the `CMAKE_BUILD_TYPE` argument, the release version for optimized binaries will be generated.
 
 ##Usage
+To run the engine, we should specify some arguments:  
 
+| Argument     | Description           |
+| ------------- | ------------- |
+| `--input` or `-i` | The pathname of the input sample |
+| `--output` or `-o` | The pathname of the output report folder |
+| `--dimension` or `-d` | The length of byte token |
+| `--report` or `-t` | The control flags for report types |
+
+- For `--dimension` - The minimum value is 1 and the maximum value is 4.
+- For `--report` - There are 3 kinds of control flags
+  + `e` - For text dump of entropy distribution.
+  + `t` - For text dump of n-gram model.
+  + `i` - For visualized image of n-gram model.
+  + Note that the `t` flag should be specified before `i` flag. (e.g. `e`, `t`, `i`, `et`, `eti`)
+
+The example command:
+```sh
+$ ./pe_ngram --input ~/mybin/a.exe --output /myreport/a --dimension 2 --report eti
+```
+or
+```sh
+$ ./pe_ngram -i ~/mybin/a.exe -o ~/mybin/a -d 2 --t eti
+```
 
 ##Reference
 + The project is inspired by the research paper from G.Jacob et. al.
