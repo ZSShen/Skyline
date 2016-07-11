@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ZSShen/PE-NGram-Analysis.svg?branch=master)](https://travis-ci.org/ZSShen/PE-NGram-Analysis) 
+[![Build Status](https://travis-ci.org/ZSShen/C-Common-Data-Structures.svg?branch=master)](https://travis-ci.org/ZSShen/C-Common-Data-Structures)  
 
 # **Skyline**  
 
