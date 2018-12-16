@@ -2,7 +2,7 @@
 
 # **Skyline**  
 
-Skyline is a research project to discover the similarity between a Windows PE file and its obfuscated instances using different types of file protectors. Specifically, it transforms the file into the ***n-gram distribution model*** which calculates the frequency of n-gram tokens. Such frequency model can be used to inspect the characteristics and the potential similarity of PE files.  
+Skyline is a research project to discover the similarity between a Windows PE file and its obfuscated instances using different types of file protectors. Specifically, it transforms a given file into a ***n-gram distribution model*** which illustrates the frequency of n-gram tokens of binary code. Such frequency model can be used to inspect the characteristics and the potential similarity of PE files.  
 
 ## **Installation**  
 #### **Basic**  
@@ -27,7 +27,7 @@ $ make
 Then the main engine should be under:  
 - `./bin/engine/release/pe_ngram`  
 
-And the assistant plugins should be under:
+Plus, the assistant plugins should be under:
 - `./bin/plugin/release/libRegion_*.so`
 - `./bin/plugin/release/libModel_*.so`
 
